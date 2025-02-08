@@ -1,9 +1,12 @@
 // Overall Entity Class - Entities are any object/character/piece/etc. that can take a spot on the gameboard
 class Entity {
-    constructor(name, shortType) {
+    constructor(name, blocksLOS, blocksMovement) {   
         this.name = name;
         this.objType = 'entity';
-        this.shortType = shortType;
+        this.blocksLOS = blocksLOS;
+        this.blocksMovement = blocksMovement;
+        this.playerControlled = false;
+        this.enemyControlled = false;
         this.temp = {
             index: null,
         }
@@ -12,7 +15,7 @@ class Entity {
 
 class Terrain extends Entity {
     constructor() {
-        super("Terrain", "TR")
+        super("Terrain", true, true)
     }
     select () {
         //console.log('Terrain selected');
@@ -22,8 +25,8 @@ class Terrain extends Entity {
 
 // Pieces are any player/enemy character that has stats
 class Piece extends Entity {
-    constructor(name, shortType, title, primaryStats, abilities, passives) {
-        super(name, shortType);
+    constructor(name, title, primaryStats, abilities, passives) {
+        super(name, true, true);
         this.title = title;
         this.abilities = abilities;
         this.passives = passives;
@@ -84,5 +87,19 @@ class Piece extends Entity {
         //console.log(this.name + ": " + this.temp.index)
         //console.log(Board.getRangeMap(this.temp.index, this.movementPoints))
         return board.getRangeMap(this.temp.index, this.movementPoints)
+    }
+}
+
+class PlayerPiece extends Piece {
+    constructor(name, title, primaryStats, abilities, passives) {
+        super(name, title, primaryStats, abilities, passives);
+        this.playerControlled = true;
+    }
+}
+
+class EnemyPiece extends Piece {    
+    constructor(name, title, primaryStats, abilities, passives) {
+        super(name, title, primaryStats, abilities, passives);
+        this.enemyControlled = true;
     }
 }

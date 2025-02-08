@@ -82,7 +82,8 @@ const NeighborMap = calculateNeighbors()
 class BoardPrototype {
     constructor() {
         this.boardArray = new Array(64);
-        this.simpleBoard = new Uint8Array(64);
+        this.simpleMoveBoard = new Uint8Array();
+        this.simpleLOSBoard = new Uint8Array();
         this.neighborMap = new Array(64);
         this.coordinateMap = CoordinateMap;
         this.losLineMap = LOSLineMap;
@@ -104,11 +105,13 @@ class BoardPrototype {
 
     updateSquare(index, value, updateVisual = true) {
         if (value !== undefined && value !== null) {
-            this.simpleBoard[index] = true;
             this.boardArray[index] = value;
+            this.simpleLOSBoard[index] = value.blocksLOS;
+            this.simpleMoveBoard[index] = value.blocksMovement;
         } else {
-            this.simpleBoard[index] = false;
             this.boardArray[index] = null;
+            this.simpleLOSBoard[index] = false;
+            this.simpleMoveBoard[index] = false;
         }
         if (updateVisual) {
             VisualBoard.updateSquare(index, value);
@@ -118,8 +121,11 @@ class BoardPrototype {
     init(board = [], updateVisual = true) {
         const size = board.length;
         this.boardArray = new Array(size);
-        this.simpleBoard = new Uint8Array(size);
-        VisualBoard.initiate();
+        this.simpleMoveBoard = new Uint8Array(size);
+        this.simpleLOSBoard = new Uint8Array(size);
+        if(updateVisual){
+            VisualBoard.init(size);
+        }
         for (let i = 0; i < size; i++) {
             this.updateSquare(i, board[i], updateVisual);
         }
@@ -127,9 +133,9 @@ class BoardPrototype {
             if (value) {
                 //console.log(value);
                 value.temp.index = index;
-                if (value.shortType === 'Player') {
+                if (value.playerControlled) {
                     this.playerPieces.push(value);
-                } else if (value.shortType === 'Enemy') {
+                } else if (value.enemyControlled) {
                     this.enemyPieces.push(value);
                 }
             }
@@ -140,7 +146,7 @@ class BoardPrototype {
         //console.log(index + " " + target)
         if(index != target){
             for (const value of LOSLineMap[index][target]) {
-                if (this.simpleBoard[value]) {
+                if (this.simpleLOSBoard[value]) {
                     return false;
                 }
             }
@@ -169,7 +175,7 @@ class BoardPrototype {
         if (checkLos) {
             NeighborMap[index].forEach((neighbor) => {
                 const newRange = range - 1;
-                if (!this.simpleBoard[neighbor] && newRange > this.calculatedSquares[neighbor] && this.calculateLos(orgIndex, neighbor)) {
+                if (!this.simpleLOSBoard[neighbor] && newRange > this.calculatedSquares[neighbor] && this.calculateLos(orgIndex, neighbor)) {
                     //console.log(neighbor)
                     this.rangeMap.push(neighbor)
                     this.calculateRange(neighbor, orgIndex, newRange, orgRange, true);
@@ -178,7 +184,7 @@ class BoardPrototype {
         } else {
             NeighborMap[index].forEach((neighbor) => {
                 const newRange = range - 1;
-                if (!this.simpleBoard[neighbor] && newRange > this.calculatedSquares[neighbor]) {
+                if (!this.simpleMoveBoard[neighbor] && newRange > this.calculatedSquares[neighbor]) {
                     //console.log(neighbor + ` is free`)
                     this.rangeMap.push(neighbor)
                     this.calculateRange(neighbor, orgIndex, newRange, orgRange);
@@ -208,7 +214,7 @@ class BoardPrototype {
                 }
             }
             const newCountDown = countDown - 1;
-            if(!this.simpleBoard[neighbor] && newCountDown > this.calculatedSquares[neighbor]){
+            if(!this.simpleMoveBoard[neighbor] && newCountDown > this.calculatedSquares[neighbor]){
                 this.calculateMoveDistance(neighbor, targetIndex, newCountDown, orgCountDown)
             }
         })
@@ -269,7 +275,7 @@ class BoardPrototype {
 }
 
 const Board = new BoardPrototype()
-const TestBoard = [,,,,,,,new Piece("Player Character", "Player"),,new Terrain(),,,,,new Terrain(),,,,,,,new Terrain(),,,,,new Terrain(),new Terrain(),new Terrain(),,,new Terrain(),,,,,new Terrain(),,,,,,new Terrain(),new Terrain(),,new Terrain(),,new Piece("Enemy Character 2", "Enemy"),,,new Terrain(),,new Terrain(),,,,,,new Piece("Enemy Character", "Enemy"),,,,new Terrain(),new Terrain()];
+const TestBoard = [,,,,,,,new PlayerPiece("Player Character"),,new Terrain(),,,,,new Terrain(),,,,,,,new Terrain(),,,,,new Terrain(),new Terrain(),new Terrain(),,,new Terrain(),,,,,new Terrain(),,,,,,new Terrain(),new Terrain(),,new Terrain(),,new EnemyPiece("Enemy Character 2"),,,new Terrain(),,new Terrain(),,,,,,new EnemyPiece("Enemy Character"),,,,new Terrain(),new Terrain()];
 Board.init(TestBoard);
 
 class TurnHandler {
@@ -287,19 +293,25 @@ class TurnHandler {
         this.totalTimer = null;
         this.selectedPiece = null;
         this.targetedPiece = null;
+        this.enemyAI = new AIPrototype('monteCarlo');
+        this.started = false;
     }
 
     randomizeTurn() {
         if (Math.random() >= 0.5) {
             //console.log('Player goes first');
-            return 'Player';
+            return 'player';
         } else {
             //console.log('Enemy goes first');
-            return 'Enemy';
+            return 'enemy';
         }
     }
 
     start() {
+        if (this.started) {
+            console.log('Game already started');
+            return;
+        }
         this.startTurn();
         if (this.totalTimeLimit !== undefined) {
             this.startTotalTimer();
@@ -308,8 +320,8 @@ class TurnHandler {
 
     startTurn() {
         //console.log(`${this.currentTurn}'s turn`);
-        if (this.currentTurn === 'Enemy') {
-            EnemyAI.startTurn('monteCarlo');
+        if (this.currentTurn === 'enemy') {
+            this.enemyAI.startTurn();
         }
         if (this.turnTimeLimit !== undefined) {
             this.turnTimer = setTimeout(() => {
@@ -320,15 +332,15 @@ class TurnHandler {
 
     startTotalTimer() {
         this.totalTimer = setInterval(() => {
-            if (this.currentTurn === 'Player') {
+            if (this.currentTurn === 'player') {
                 this.playerTimeLeft--;
                 if (this.playerTimeLeft <= 0) {
-                    this.loseCondition('Player');
+                    this.loseCondition('player');
                 }
             } else {
                 this.enemyTimeLeft--;
                 if (this.enemyTimeLeft <= 0) {
-                    this.loseCondition('Enemy');
+                    this.loseCondition('enemy');
                 }
             }
         }, 1000);
@@ -336,7 +348,7 @@ class TurnHandler {
 
     endTurn() {
         clearTimeout(this.turnTimer);
-        this.currentTurn = this.currentTurn === 'Player' ? 'Enemy' : 'Player';
+        this.currentTurn = this.currentTurn === 'player' ? 'enemy' : 'player';
         this.selectedPiece = null;
         this.targetedPiece = null;
         requestAnimationFrame(() => {
@@ -361,14 +373,16 @@ class TurnHandler {
     }
 
     selectPiece(entity) {
-        if(entity.shortType === this.currentTurn){
-            this.selectedPiece = entity;
-            entity.select();
+        if (this.currentTurn === 'player') {
+            if (entity.playerControlled) {
+                this.selectPiece = entity;
+            } else {
+                this.targetedPiece = entity;
+            }
         } else {
-            this.targetedPiece = entity;
+            console.log('Not your turn');
         }
     }
 }
 
 const CurrentCombat = new TurnHandler();
-CurrentCombat.start()

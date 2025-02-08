@@ -22,8 +22,8 @@ class VisualElement {
 // VisualBoard holds all visuals for the Board
 const VisualBoard = {
     contents: {},
-    initiate() {
-        for (let i = 0; i < 64; i++) {
+    initiate(size) {
+        for (let i = 0; i < size; i++) {
             const localValue = i;
             this.contents['Square' + localValue] = new VisualElement('Square' + localValue, localValue);
         }

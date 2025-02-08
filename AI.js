@@ -1,15 +1,18 @@
-const EnemyAI = {
-    startTurn: function(typeOfAI) {
-        const possibleMoves = this.getPossibleMovements();
+class AIPrototype {
+    constructor(type) {
+        this.type = type;
+    }
+    
+    startTurn() {
         let move = null;
-        if(typeOfAI === 'random') {
-            move = this.randomMove(possibleMoves);
-        } else if(typeOfAI === 'chase'){
-            move = this.chaseMove(possibleMoves);
-        } else if(typeOfAI === "monteCarlo"){
+        if(this.type === 'monteCarlo') {
             move = this.monteCarloMove();
+        } else if (this.type === 'random') {
+            move = this.randomMove();
+        } else if (this.type === 'chase') {
+            move = this.chaseMove();
         }
-        if (move != false){
+        if (move != false) {
             if (move[0] === 'movement') {
                 Board.boardArray[move[1]].move(move[2], Board)
                 CurrentCombat.endTurn();
@@ -17,9 +20,9 @@ const EnemyAI = {
         } else {
             CurrentCombat.endTurn()
         }
-    },
+    }
 
-    getPossibleMovements: function() {
+    getPossibleMoves() {
         let possibleMoves = [];
         Board.enemyPieces.forEach(piece => {
             piece.getMovementRange().forEach(move => {
@@ -27,30 +30,31 @@ const EnemyAI = {
             })
         })
         return possibleMoves;
-    },
+    }
 
-    randomMove: function(possibleMoves) {
+    randomMove() {
+        const possibleMoves = this.getPossibleMoves();
         const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-        if(randomMove != undefined){
-            return [`movement`, randomMove[0], randomMove[1]];
-        } else {
-            return false
+        if (randomMove != undefined) {
+            return ['movement', randomMove[0], randomMove[1]];
         }
-    },
+        return false;
+    }
 
-    chaseMove: function(possibleMoves) {
+    chaseMove() {
         const target = Board.playerPieces[0].temp.index;
         let moveArray = new Array(3).fill(99)
+        let possibleMoves = this.getPossibleMoves();
         possibleMoves.forEach(move =>{
             let distance = Board.calculateMoveDistanceWrapper(move, target);
             if (distance < moveArray[2]){
                 moveArray = [move[0], move[1], distance]
             }
         })
-        return [`movement`, moveArray[0], moveArray[1]]
-    },
+        return ['movement', moveArray[0], moveArray[1]]
+    }
 
-    monteCarloMove: function() {
+    monteCarloMove() {
         const gameState = new GameState(Board.exportBoard(), 'enemy');
         
         const mcts = new MonteCarloTreeSearch(gameState);
@@ -125,160 +129,6 @@ class GameState {
         return false;
     }
 }
-
-
-/*class SimulationAIInstance {
-    constructor(type, board){
-        this.type = type;
-        this.board = board;
-        this.pieces = type == "player" ? board.playerPieces : board.enemyPieces;
-        this.score = 0;
-    }
-    
-    startTurn() {
-        const possibleMoves = this.getPossibleMovements();
-        let move = this.randomMove(possibleMoves);
-        if (move != false){
-            if (move[0] === 'movement') {
-                this.board.boardArray[move[1]].move(move[2], this.board, false)
-            }
-            return [move[1], move[2]]
-        } 
-        return false
-    }
-
-    getPossibleMovements() {
-        let possibleMoves = []
-        this.pieces.forEach(piece =>{
-            possibleMoves.push([piece.temp.index, piece.getMovementRange(this.board)])
-        })
-        return possibleMoves
-    }
-
-    randomMove(possibleMoves) {
-        const randomPiece = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-        if (randomPiece[1].length > 0){
-            const randomPosition = randomPiece[1][Math.floor(Math.random() * randomPiece[1].length)];
-            return [`movement`, randomPiece[0], randomPosition];
-        } else {
-            return false
-        }
-    }
-}
-
-/class Simulation {
-    constructor(initBoard = [], simulations, depth) {
-        this.board = new BoardPrototype();
-        this.board.init(initBoard, false);
-        this.possibleMoves = this.getPossibleMovements();
-        this.simulations = simulations;
-        this.depth = depth;
-        this.scores = new Array(this.possibleMoves.length).fill(0).map(() => []);
-    }
-
-    getPossibleMovements() {
-        let possibleMoves = [];
-        this.board.enemyPieces.forEach(piece => {
-            possibleMoves.push([piece.temp.index, piece.getMovementRange(this.board)]);
-        });
-        return possibleMoves;
-    }
-
-    calculatePieceWeights() {
-        let output = [];
-        this.scores.forEach((piece, pieceKey) => {
-            if (output[pieceKey] == undefined) {
-                output[pieceKey] = 0;
-            }
-            piece.forEach(score => {
-                output[pieceKey] += score;
-            });
-        });
-        return output;
-    }
-
-    getWeightedRandom(weights) {
-        const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-        const randomNum = Math.random() * totalWeight;
-        let cumulativeWeight = 0;
-        for (let i = 0; i < weights.length; i++) {
-            cumulativeWeight += weights[i];
-            if (randomNum < cumulativeWeight) {
-                return i;
-            }
-        }
-        return weights.length - 1;
-    }
-
-    simulate() {
-        //console.group('Simulation');
-        this.possibleMoves.forEach((moveSet, setKey) => {
-            moveSet[1].forEach(() => {
-                if (this.scores[setKey] == undefined) {
-                    this.scores[setKey] = [0];
-                } else {
-                    this.scores[setKey].push(0);
-                }
-            });
-        });
-        for (let i = 0; i < this.simulations; i++) {
-            //console.group(`Simulation ${i + 1}`);
-            let piece = null;
-            let move = null;
-            if (Math.random() > 0.5) {
-                let pieceWeights = this.calculatePieceWeights();
-                piece = this.getWeightedRandom(pieceWeights);
-                move = this.getWeightedRandom(this.scores[piece]);
-            } else {
-                // Select a non-weighted random key
-                piece = Math.floor(Math.random() * this.possibleMoves.length);
-                move = Math.floor(Math.random() * this.possibleMoves[piece][1].length);
-            }
-            //console.log(`Selected piece: ${piece}, Selected move: ${move}`);
-            this.scores[piece][move] += this.simulationLoop(piece, move, this.depth, this.depth, this.board, new SimulationAIInstance('enemy', this.board));
-            //console.groupEnd();
-        }
-        //console.log(this.scores);
-        //console.groupEnd();
-        console.log(this.scores)
-    }
-
-    simulationLoop(pieceIndex, moveIndex, orgDepth, remainingDepth, board, player) {
-        //console.group(`Depth ${orgDepth - remainingDepth + 1}`);
-        let chosenMove = player.startTurn();
-        let actingPieceIndex = chosenMove[0];
-        //console.log(`Player ${player.type}, Chosen move ${chosenMove}`);
-        if (player.type == "enemy" && actingPieceIndex && this.checkWinCondition(board, actingPieceIndex)) {
-            //console.log(`Win condition met at depth ${orgDepth - remainingDepth + 1}`);
-            //console.groupEnd();
-            return orgDepth - remainingDepth;
-        }
-        if (--remainingDepth == 0) {
-            //console.log(`Reached max depth at depth ${orgDepth}`);
-            //console.groupEnd();
-            return -25;
-        }
-        let nextPlayer = player.type == "enemy" ? "player" : "enemy";
-        let newBoard = new BoardPrototype();
-        newBoard.init(board.exportBoard(), false);
-        let result = this.simulationLoop(pieceIndex, moveIndex, orgDepth, remainingDepth, newBoard, new SimulationAIInstance(nextPlayer, newBoard));
-        player.score += result;
-        //console.groupEnd();
-        return result;
-    }
-
-    checkWinCondition(board, index) {
-        for (let i = 0; i < NeighborMap[index].length; i++) {
-            let compIndex = NeighborMap[index][i]
-            if (board.boardArray[compIndex] != null) {
-                if (board.boardArray[compIndex].shortType == "Player") {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-}*/
 
 const explorationConstant = 1.41;
 
