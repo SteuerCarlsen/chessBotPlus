@@ -1,0 +1,24 @@
+Short Pitch
+* Turn-based dungeon crawler game but using chess-like rules
+
+Story/setup
+* World has ended - you help some kind of eccentric time-mage/engineer trying to figure out what happened - and potentially save the world (probably some kind of twist where your reality is lost no matter what, so you�re just helping research for another dimension. 
+
+Game-loop
+* Set up a team of 3 heroes
+* Enter a "Dungeon" (one or multiple linked fights)
+* Complete combat
+* Get loot and/or progress
+* Improve team/heroes/etc.
+* Repeat
+
+Combat
+* One move/action in total pr. turn - like chess (test if one move + one action feels better).
+* Combat AI based on Monte Carlo Tree search 
+
+Meta-progression
+* Gear/Items
+* New Heroes
+* Spells and Spell books
+* Buildings/areas restored from time - unlocks some heroes, quests, buffs, game systems
+

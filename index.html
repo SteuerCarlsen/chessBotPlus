@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="StyleSheet.css">
+</head>
+<body>
+    <div class="UIElement" id="leftMenuBar">
+        <div class="MenuButton" id="storyButton" onclick="VisualMenuBar.story.activate()">Story</div>
+        <div class="MenuButton" id="combatButton" onclick="VisualMenuBar.combat.activate()">Combat</div>
+        <div class="MenuButton" id="heroesButton" onclick="VisualMenuBar.heroes.activate()">Heroes</div>
+        <div class="MenuButton" id="inventoryButton" onclick="VisualMenuBar.inventory.activate()">Inventory</div>
+        <div class="MenuButton" id="abilitiesButton" onclick="VisualMenuBar.abilities.activate()">Abilities</div>
+        <div class="MenuButton" id="townButton" onclick="VisualMenuBar.town.activate()">Town</div>
+        <div class="MenuButton" id="Menu6"></div>
+        <div class="MenuButton" id="Menu7"></div>
+        <div class="MenuButton" id="Menu8"></div>
+        <div class="MenuButton" id="Menu9"></div>
+        <div class="MenuButton" id="Menu10"></div>
+        <div class="MenuButton" id="Menu11"></div>
+        <div class="MenuButton" id="Menu12"></div>
+        <div class="MenuButton" id="Menu13"></div>
+        <div class="MenuButton" id="settingsButton" onclick="VisualMenuBar.settings.activate()">Settings</div>
+    </div>
+    <div class="UIElement Page Visible" id="storyPage">
+        PLACEHOLDER - STORY
+    </div>    
+    <div class="UIElement Page Hidden" id="combatPage">
+        <div class="UIElement" id="battlefield">
+            <div class="Square" id="Square0"></div>
+            <div class="Square" id="Square1"></div>
+            <div class="Square" id="Square2"></div>
+            <div class="Square" id="Square3"></div>
+            <div class="Square" id="Square4"></div>
+            <div class="Square" id="Square5"></div>
+            <div class="Square" id="Square6"></div>
+            <div class="Square" id="Square7"></div>
+            <div class="Square" id="Square8"></div>
+            <div class="Square" id="Square9"></div>
+            <div class="Square" id="Square10"></div>
+            <div class="Square" id="Square11"></div>
+            <div class="Square" id="Square12"></div>
+            <div class="Square" id="Square13"></div>
+            <div class="Square" id="Square14"></div>
+            <div class="Square" id="Square15"></div>
+            <div class="Square" id="Square16"></div>
+            <div class="Square" id="Square17"></div>
+            <div class="Square" id="Square18"></div>
+            <div class="Square" id="Square19"></div>
+            <div class="Square" id="Square20"></div>
+            <div class="Square" id="Square21"></div>
+            <div class="Square" id="Square22"></div>
+            <div class="Square" id="Square23"></div>
+            <div class="Square" id="Square24"></div>
+            <div class="Square" id="Square25"></div>
+            <div class="Square" id="Square26"></div>
+            <div class="Square" id="Square27"></div>
+            <div class="Square" id="Square28"></div>
+            <div class="Square" id="Square29"></div>
+            <div class="Square" id="Square30"></div>
+            <div class="Square" id="Square31"></div>
+            <div class="Square" id="Square32"></div>
+            <div class="Square" id="Square33"></div>
+            <div class="Square" id="Square34"></div>
+            <div class="Square" id="Square35"></div>
+            <div class="Square" id="Square36"></div>
+            <div class="Square" id="Square37"></div>
+            <div class="Square" id="Square38"></div>
+            <div class="Square" id="Square39"></div>
+            <div class="Square" id="Square40"></div>
+            <div class="Square" id="Square41"></div>
+            <div class="Square" id="Square42"></div>
+            <div class="Square" id="Square43"></div>
+            <div class="Square" id="Square44"></div>
+            <div class="Square" id="Square45"></div>
+            <div class="Square" id="Square46"></div>
+            <div class="Square" id="Square47"></div>
+            <div class="Square" id="Square48"></div>
+            <div class="Square" id="Square49"></div>
+            <div class="Square" id="Square50"></div>
+            <div class="Square" id="Square51"></div>
+            <div class="Square" id="Square52"></div>
+            <div class="Square" id="Square53"></div>
+            <div class="Square" id="Square54"></div>
+            <div class="Square" id="Square55"></div>
+            <div class="Square" id="Square56"></div>
+            <div class="Square" id="Square57"></div>
+            <div class="Square" id="Square58"></div>
+            <div class="Square" id="Square59"></div>
+            <div class="Square" id="Square60"></div>
+            <div class="Square" id="Square61"></div>
+            <div class="Square" id="Square62"></div>
+            <div class="Square" id="Square63"></div>
+        </div>
+        <div class="UIElement" id="abilitySelection">
+            <div class="AbilityButton" id="Ability0" onclick="VisualAbilityBar.A0.onCooldown()"></div>
+            <div class="AbilityButton" id="Ability1"></div>
+            <div class="AbilityButton" id="Ability2"></div>
+            <div class="AbilityButton" id="Ability3"></div>
+            <div class="AbilityButton" id="Ability4"></div>
+            <div class="AbilityButton" id="Ability5"></div>
+            <div class="AbilityButton" id="Ability6"></div>
+            <div class="AbilityButton" id="Ability7"></div>
+        </div>
+        <div class="UIElement" id="selectedCharacters">
+            <div class="PiecePortrait" id="selectedPlayerPortrait">
+                <div id="selectedPlayerName">Name</div>
+                <div id="selectedPlayerHealthBar">HealthBar</div>
+                <div id="selectedPlayerResourceBar">RessourceBar</div>
+                <div id="selectedPlayerStatusEfects">StatusEffects</div>
+            </div>
+            <div class="PiecePortrait" id="selectedEnemyPortrait">
+                <div id="selectedEnemyName">Name</div>
+                <div id="selectedEnemyHealthBar">HealthBar</div>
+                <div id="selectedEnemyResourceBar">RessourceBar</div>
+                <div id="selectedEnemyStatusEfects">StatusEffects</div>
+            </div>
+            <div class="UIElement" id="endTurnButton">End Turn</div>
+        </div>
+    </div>
+    <div class="UIElement Page Hidden" id="heroesPage">
+        PLACEHOLDER - HEROES
+    </div>
+    <div class="UIElement Page Hidden" id="inventoryPage">
+        <div class="UIElement" id="inventory">
+            <div class="Square" id="Inventory0"></div>
+            <div class="Square" id="Inventory1"></div>
+            <div class="Square" id="Inventory2"></div>
+            <div class="Square" id="Inventory3"></div>
+            <div class="Square" id="Inventory4"></div>
+            <div class="Square" id="Inventory5"></div>
+            <div class="Square" id="Inventory6"></div>
+            <div class="Square" id="Inventory7"></div>
+            <div class="Square" id="Inventory8"></div>
+            <div class="Square" id="Inventory9"></div>
+            <div class="Square" id="Inventory10"></div>
+            <div class="Square" id="Inventory11"></div>
+            <div class="Square" id="Inventory12"></div>
+            <div class="Square" id="Inventory13"></div>
+            <div class="Square" id="Inventory14"></div>
+            <div class="Square" id="Inventory15"></div>
+            <div class="Square" id="Inventory16"></div>
+            <div class="Square" id="Inventory17"></div>
+            <div class="Square" id="Inventory18"></div>
+            <div class="Square" id="Inventory19"></div>
+            <div class="Square" id="Inventory20"></div>
+            <div class="Square" id="Inventory21"></div>
+            <div class="Square" id="Inventory22"></div>
+            <div class="Square" id="Inventory23"></div>
+            <div class="Square" id="Inventory24"></div>
+            <div class="Square" id="Inventory25"></div>
+            <div class="Square" id="Inventory26"></div>
+            <div class="Square" id="Inventory27"></div>
+            <div class="Square" id="Inventory28"></div>
+            <div class="Square" id="Inventory29"></div>
+            <div class="Square" id="Inventory30"></div>
+            <div class="Square" id="Inventory31"></div>
+            <div class="Square" id="Inventory32"></div>
+            <div class="Square" id="Inventory33"></div>
+            <div class="Square" id="Inventory34"></div>
+            <div class="Square" id="Inventory35"></div>
+            <div class="Square" id="Inventory36"></div>
+            <div class="Square" id="Inventory37"></div>
+            <div class="Square" id="Inventory38"></div>
+            <div class="Square" id="Inventory39"></div>
+            <div class="Square" id="Inventory40"></div>
+            <div class="Square" id="Inventory41"></div>
+            <div class="Square" id="Inventory42"></div>
+            <div class="Square" id="Inventory43"></div>
+            <div class="Square" id="Inventory44"></div>
+            <div class="Square" id="Inventory45"></div>
+            <div class="Square" id="Inventory46"></div>
+            <div class="Square" id="Inventory47"></div>
+            <div class="Square" id="Inventory48"></div>
+            <div class="Square" id="Inventory49"></div>
+            <div class="Square" id="Inventory50"></div>
+            <div class="Square" id="Inventory51"></div>
+            <div class="Square" id="Inventory52"></div>
+            <div class="Square" id="Inventory53"></div>
+            <div class="Square" id="Inventory54"></div>
+            <div class="Square" id="Inventory55"></div>
+            <div class="Square" id="Inventory56"></div>
+            <div class="Square" id="Inventory57"></div>
+            <div class="Square" id="Inventory58"></div>
+            <div class="Square" id="Inventory59"></div>
+            <div class="Square" id="Inventory60"></div>
+            <div class="Square" id="Inventory61"></div>
+            <div class="Square" id="Inventory62"></div>
+            <div class="Square" id="Inventory63"></div>
+        </div>
+        <div class="UIElement" id="inventoryGroups"></div>
+        <div class="UIElement" id="equippedItems"></div>
+    </div>
+    <div class="UIElement Page Hidden" id="abilitiesPage">
+        PLACEHOLDER - ABILITIES
+    </div>
+    <div class="UIElement Page Hidden" id="townPage">
+        PLACEHOLDER - TOWN
+    </div>
+    <div class="UIElement Page Hidden" id="settingsPage">
+        PLACEHOLDER - SETTINGS
+    </div>   
+</body>
+<footer>
+    <script type="text/javascript" src='Utilities.js'> </script>
+    <script type="text/javascript" src='VisualHandler.js'> </script>
+    <script type="text/javascript" src='Stats.js'> </script>
+    <script type="text/javascript" src='Abilities.js'> </script>
+    <script type="text/javascript" src='Entities.js'> </script>
+    <script type="text/javascript" src='AI.js'> </script>
+    <script type="text/javascript" src='CombatHandler.js'> </script>
+    <script type="text/javascript" src='Items.js'> </script>
+</footer>
+</html>

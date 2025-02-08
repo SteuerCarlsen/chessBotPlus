@@ -1,0 +1,205 @@
+.PlayerPiece {
+    height: 83px;
+    width: 83px;
+    background-color: green;
+}
+
+.EnemyPiece {
+    height: 83px;
+    width: 83px;
+    background-color: red;
+}
+
+.TRPiece {
+    height: 83px;
+    width: 83px;
+    background-color: black;
+}
+
+.Range {
+    height: 83px;
+    width: 83px;
+    background-color: lightgreen;
+}
+
+.undefinedPiece {
+    height: 83px;
+    width: 83px;
+    background-color: white;
+}
+
+.PiecesContainer {
+    height: 202px;
+    width: 606px;
+}
+
+.Piece {
+    border: 1px solid black;
+    height: 200px;
+    width: 200px;
+    float: inline-end;
+}
+
+.AbilityButton {
+    display: inline-block;
+    width: 83px;
+    height: 126px;
+    background-color: lightgray;
+    border: 1px solid black;
+    margin-left: -1px;
+    margin-top: -1px;
+    margin-right: -4px;
+    margin-bottom: -4px;
+    text-align: center;
+    font-size: xx-large;
+    overflow: hidden;
+    line-height: 126px;
+}
+
+.onCooldown {
+    opacity: 50%;
+}
+
+.SelectedAbilityButton {
+    background-color: green;
+}
+
+.Broad {
+    font-weight: bold;
+}
+
+.PieceInfo {
+    border: 1px solid black;
+    height: 75px;
+    background-color: lightgreen;
+}
+
+.UIElement {
+    display: inline-block;
+    position: fixed;
+}
+
+.Square {
+    display: inline-block;
+    height: 83px;
+    width: 83px;
+    border: 1px solid black;
+    margin-left: -1px;
+    margin-top: -1px;
+    margin-right: -4px;
+    margin-bottom: -4px;
+    overflow: hidden;
+}
+
+.Page {
+    height: 800px;
+    width: 1135px;
+    left: 145px;
+    top: 0px;
+}
+
+.Visible {
+    visibility: visible;
+}
+
+.Hidden {
+    visibility: hidden;
+}
+
+.MenuButton {
+    display: inline-block;
+    height: 50px;
+    width: 144px;
+    border: 1px solid black;
+    margin-left: -1px;
+    margin-top: -1px;
+    margin-right: -4px;
+    margin-bottom: -4px;
+    text-align: center;
+    font-size: larger;
+    overflow: hidden;
+    line-height: 50px;
+}
+
+.PiecePortrait {
+    display: inline-block;
+    height: 335px;
+    width: 460px;
+    border: 1px solid black;
+    margin-left: -1px;
+    margin-top: -1px;
+    margin-right: -4px;
+    margin-bottom: -4px;
+    text-align: center;
+    font-size: larger;
+    overflow: hidden;
+    line-height: 30px;
+}
+
+#leftMenuBar {
+    height: 798px;
+    width: 144px;
+    border: 1px solid black;
+    left: 0px;
+    top: 0px;
+}
+
+#battlefield {
+    height: 671px;
+    width: 671px;
+    border: 1px solid black;
+    left: 145px;
+    top: 0px;
+}
+
+#abilitySelection {
+    height: 126px;
+    width: 671px;
+    border: 1px solid black;
+    left: 145px;
+    top: 672px;
+}
+
+#selectedCharacters {
+    height: 798px;
+    width: 460px;
+    border: 1px solid black;
+    left: 817px;
+    top: 0px;
+}
+
+#endTurnButton {
+    height: 126px;
+    width: 460px;
+    border: 1px solid black;
+    left: 817px;
+    top: 672px;
+    text-align: center;
+    font-size: larger;
+    overflow: hidden;
+    line-height: 126px;
+}
+
+#inventory {
+    height: 671px;
+    width: 671px;
+    border: 1px solid black;
+    left: 145px;
+    top: 0px;
+}
+
+#inventoryGroups {
+    height: 126px;
+    width: 671px;
+    border: 1px solid black;
+    left: 145px;
+    top: 672px;
+}
+
+#equippedItems {
+    height: 798px;
+    width: 460px;
+    border: 1px solid black;
+    left: 817px;
+    top: 0px;
+}
