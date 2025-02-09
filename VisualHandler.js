@@ -22,7 +22,7 @@ class VisualElement {
 // VisualBoard holds all visuals for the Board
 const VisualBoard = {
     contents: {},
-    initiate(size) {
+    init(size) {
         for (let i = 0; i < size; i++) {
             const localValue = i;
             this.contents['Square' + localValue] = new VisualElement('Square' + localValue, localValue);
@@ -35,8 +35,8 @@ const VisualBoard = {
     },
     updateSquare(index, value) {
         let content = `<div class='undefinedPiece' onclick='Board.selectSquare(${index})'>` + index + `</div>`;
-        if (value != undefined && value.shortType != undefined) {
-            content = `<div class='${value.shortType}Piece' onclick='Board.selectSquare(${index})'>` + index + `</div>`;
+        if (value != undefined && value.objType != undefined) {
+            content = `<div class='${value.objType}' onclick='Board.selectSquare(${index})'>` + index + `</div>`;
         } else if (value == "RG") {
             content = `<div class='Range' onclick='Board.selectSquare(${index})'>` + index + `</div>`;
         }

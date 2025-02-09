@@ -2,7 +2,7 @@
 class Entity {
     constructor(name, blocksLOS, blocksMovement) {   
         this.name = name;
-        this.objType = 'entity';
+        this.objType = 'Entity';
         this.blocksLOS = blocksLOS;
         this.blocksMovement = blocksMovement;
         this.playerControlled = false;
@@ -15,7 +15,8 @@ class Entity {
 
 class Terrain extends Entity {
     constructor() {
-        super("Terrain", true, true)
+        super("Terrain", true, true);
+        this.objType = 'Terrain';
     }
     select () {
         //console.log('Terrain selected');
@@ -93,6 +94,7 @@ class Piece extends Entity {
 class PlayerPiece extends Piece {
     constructor(name, title, primaryStats, abilities, passives) {
         super(name, title, primaryStats, abilities, passives);
+        this.objType = 'PlayerPiece';
         this.playerControlled = true;
     }
 }
@@ -100,6 +102,7 @@ class PlayerPiece extends Piece {
 class EnemyPiece extends Piece {    
     constructor(name, title, primaryStats, abilities, passives) {
         super(name, title, primaryStats, abilities, passives);
+        this.objType = 'EnemyPiece';
         this.enemyControlled = true;
     }
 }

@@ -10,7 +10,7 @@
     background-color: red;
 }
 
-.TRPiece {
+.Terrain {
     height: 83px;
     width: 83px;
     background-color: black;
@@ -170,7 +170,19 @@
 
 #endTurnButton {
     height: 126px;
-    width: 460px;
+    width: 229px;
+    border: 1px solid black;
+    left: 1048px;
+    top: 672px;
+    text-align: center;
+    font-size: larger;
+    overflow: hidden;
+    line-height: 126px;
+}
+
+#startCombatButton {
+    height: 126px;
+    width: 230px;
     border: 1px solid black;
     left: 817px;
     top: 672px;

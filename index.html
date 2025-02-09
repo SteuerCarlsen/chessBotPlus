@@ -1,6 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Dungeon Crawler</title>
     <link rel="stylesheet" href="StyleSheet.css">
 </head>
 <body>
@@ -114,8 +117,8 @@
                 <div id="selectedEnemyResourceBar">RessourceBar</div>
                 <div id="selectedEnemyStatusEfects">StatusEffects</div>
             </div>
-            <div class="UIElement" id="startCombatButton">startCombat</div>
-            <div class="UIElement" id="endTurnButton" onclick="CurrentCombat.start()">End Turn</div>
+            <div class="UIElement" id="startCombatButton" onclick="CurrentCombat.start()">Start Combat</div>
+            <div class="UIElement" id="endTurnButton" onclick="CurrentCombat.endTurn()">End Turn</div>
         </div>
     </div>
     <div class="UIElement Page Hidden" id="heroesPage">
