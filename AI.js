@@ -99,22 +99,24 @@ class GameState {
         this.currentPlayer = this.currentPlayer === 'player' ? 'enemy' : 'player';
     }
 
-    getScore() {
-        if (this.checkWinCondition()) {
-            return 1;
-        }
-        return 0;
-    }
-
     getLastMove() {
         return this.lastMove;
     }
 
-    checkWinCondition() {
-        for (const piece of this.board.enemyPieces) {
-            for (const neighborIndex of NeighborMap[piece.temp.index]) {
-                const neighborPiece = board.boardArray[neighborIndex];
-                if (neighborPiece && neighborPiece.objType === "PlayerPiece") {
+    checkWinCondition(pieceIndex) {
+        if (pieceIndex === undefined) {
+            for (const piece of this.board.enemyPieces) {
+                for (const neighborIndex of NeighborMap[piece.temp.index]) {
+                    const neighborPiece = this.board.boardArray[neighborIndex];
+                    if (neighborPiece instanceof PlayerPiece) {
+                        return true;
+                    }
+                }
+            }
+        } else {
+            for (const neighborIndex of NeighborMap[pieceIndex]) {
+                const neighborPiece = this.board.boardArray[neighborIndex];
+                if (neighborPiece instanceof PlayerPiece) {
                     return true;
                 }
             }
@@ -138,7 +140,7 @@ class TreeNode {
         return this.children.reduce((bestChild, child) => {
             const exploitation = child.wins / child.visits;
             const exploration = Math.sqrt(Math.log(this.visits) / child.visits);
-            const uct = exploitation * this.explorationConstant * exploration;
+            const uct = exploitation + this.explorationConstant * exploration;
 
             if(uct > bestChild.uct) {
                 return {node: child, uct: uct};
@@ -165,13 +167,15 @@ class TreeNode {
     simulate(maxDepth) {
         let currentState = this.state.clone();
         let depth = 0;
-        while(!currentState.checkWinCondition() && depth < maxDepth) {
+        while(depth < maxDepth) {
             const possibleMoves = currentState.getPossibleMoves();
+            if(possibleMoves.length === 0) return 0;
             const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
             currentState.play(randomMove);
+            if(currentState.checkWinCondition()) return 1;
             depth++;
         }
-        return currentState.getScore();
+        return 0;
     }
 
     backpropagate(result) {
@@ -193,7 +197,7 @@ class TreeNode {
 }
 
 class MonteCarloTreeSearch {
-    constructor(initialState, timeLimit = 500, maxDepth = 20) {
+    constructor(initialState, timeLimit = 500, maxDepth = 25) {
         this.root = new TreeNode(initialState);
         this.timeLimit = timeLimit;
         this.maxDepth = maxDepth;
@@ -221,6 +225,7 @@ class MonteCarloTreeSearch {
         }
 
         console.log(`Completed ${iterations} iterations in ${Date.now() - startTime}ms`);
+        console.log(this.getBestMove());
         return this.getBestMove();
     }
 

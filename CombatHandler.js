@@ -265,8 +265,10 @@ class BoardPrototype {
             if(value != null && value != undefined){
                 if(value instanceof Terrain){
                     exportResult[key] = new Terrain()
-                } else if (value instanceof Piece){
-                    exportResult[key] = new Piece(value.name, value.shortType)
+                } else if (value instanceof PlayerPiece){
+                    exportResult[key] = new PlayerPiece(value.name)
+                } else if (value instanceof EnemyPiece){
+                    exportResult[key] = new EnemyPiece(value.name)
                 }
             }
         })
@@ -299,10 +301,10 @@ class TurnHandler {
 
     randomizeTurn() {
         if (Math.random() >= 0.5) {
-            //console.log('Player goes first');
+            console.log('Player goes first');
             return 'player';
         } else {
-            //console.log('Enemy goes first');
+            console.log('Enemy goes first');
             return 'enemy';
         }
     }
@@ -312,6 +314,8 @@ class TurnHandler {
             console.log('Game already started');
             return;
         }
+        console.log("Game starting");
+        this.started = true;
         this.startTurn();
         if (this.totalTimeLimit !== undefined) {
             this.startTotalTimer();
@@ -375,7 +379,8 @@ class TurnHandler {
     selectPiece(entity) {
         if (this.currentTurn === 'player') {
             if (entity.playerControlled) {
-                this.selectPiece = entity;
+                this.selectedPiece = entity;
+                entity.select();
             } else {
                 this.targetedPiece = entity;
             }
