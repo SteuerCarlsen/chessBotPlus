@@ -99,17 +99,8 @@ class GameState {
         this.currentPlayer = this.currentPlayer === 'player' ? 'enemy' : 'player';
     }
 
-    isTerminal() {
-        for (const piece of this.board.enemyPieces) {
-            if (this.checkWinCondition(this.board, piece.temp.index)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     getScore() {
-        if (this.isTerminal()) {
+        if (this.checkWinCondition()) {
             return 1;
         }
         return 0;
@@ -119,18 +110,18 @@ class GameState {
         return this.lastMove;
     }
 
-    checkWinCondition(board, index) {
-        for (const neighborIndex of NeighborMap[index]) {
-            const piece = board.boardArray[neighborIndex];
-            if (piece && piece.shortType === "Player") {
-                return true;
+    checkWinCondition() {
+        for (const piece of this.board.enemyPieces) {
+            for (const neighborIndex of NeighborMap[piece.temp.index]) {
+                const neighborPiece = board.boardArray[neighborIndex];
+                if (neighborPiece && neighborPiece.objType === "PlayerPiece") {
+                    return true;
+                }
             }
         }
         return false;
     }
 }
-
-const explorationConstant = 1.41;
 
 class TreeNode {
     constructor(state) {
@@ -140,13 +131,14 @@ class TreeNode {
         this.wins = 0;             // How many wins we got through this position
         this.visits = 0;           // How many times we tried this position
         this.untriedMoves = state.getPossibleMoves();  // Moves we haven't tried yet
+        this.explorationConstant = 1.41;
     }
     
     selectChild() {
         return this.children.reduce((bestChild, child) => {
             const exploitation = child.wins / child.visits;
             const exploration = Math.sqrt(Math.log(this.visits) / child.visits);
-            const uct = exploitation + explorationConstant * exploration;
+            const uct = exploitation * this.explorationConstant * exploration;
 
             if(uct > bestChild.uct) {
                 return {node: child, uct: uct};
@@ -173,7 +165,7 @@ class TreeNode {
     simulate(maxDepth) {
         let currentState = this.state.clone();
         let depth = 0;
-        while(!currentState.isTerminal() && depth < maxDepth) {
+        while(!currentState.checkWinCondition() && depth < maxDepth) {
             const possibleMoves = currentState.getPossibleMoves();
             const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
             currentState.play(randomMove);
@@ -196,7 +188,7 @@ class TreeNode {
     }
 
     isTerminal() {
-        return this.state.isTerminal();
+        return this.state.checkWinCondition();
     }
 }
 
