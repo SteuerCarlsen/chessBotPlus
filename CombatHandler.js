@@ -266,9 +266,11 @@ class BoardPrototype {
                 if(value instanceof Terrain){
                     exportResult[key] = new Terrain()
                 } else if (value instanceof PlayerPiece){
-                    exportResult[key] = new PlayerPiece(value.name)
+                    const pieceData = value.exportPiece()
+                    exportResult[key] = new PlayerPiece(pieceData[0], pieceData[1], pieceData[2])
                 } else if (value instanceof EnemyPiece){
-                    exportResult[key] = new EnemyPiece(value.name)
+                    const pieceData = value.exportPiece()
+                    exportResult[key] = new EnemyPiece(pieceData[0], pieceData[1], pieceData[2])
                 }
             }
         })
@@ -277,7 +279,34 @@ class BoardPrototype {
 }
 
 const Board = new BoardPrototype()
-const TestBoard = [,,,,,,,new PlayerPiece("Player Character"),,new Terrain(),,,,,new Terrain(),,,,,,,new Terrain(),,,,,new Terrain(),new Terrain(),new Terrain(),,,new Terrain(),,,,,new Terrain(),,,,,,new Terrain(),new Terrain(),,new Terrain(),,new EnemyPiece("Enemy Character 2"),,,new Terrain(),,new Terrain(),,,,,,new EnemyPiece("Enemy Character"),,,,new Terrain(),new Terrain()];
+const TestBoard = [,,,,,,,
+    new PlayerPiece("Player Character","None",{ 
+    strength: 10,
+    agility: 10,
+    stamina: 10,
+    intelligence: 10,
+    wisdom: 10,
+    dexterity: 10,
+    initiative: 10,
+    }),,new Terrain(),,,,,new Terrain(),,,,,,,new Terrain(),,,,,new Terrain(),new Terrain(),new Terrain(),,,new Terrain(),,,,,new Terrain(),,,,,,new Terrain(),new Terrain(),,new Terrain(),,
+    new EnemyPiece("Enemy Character 2","None",{
+        strength: 10,
+        agility: 10,
+        stamina: 10,
+        intelligence: 10,
+        wisdom: 10,
+        dexterity: 10,
+        initiative: 10,
+    }),,,new Terrain(),,new Terrain(),,,,,,
+    new EnemyPiece("Enemy Character","None",{
+        strength: 10,
+        agility: 10,
+        stamina: 10,
+        intelligence: 10,
+        wisdom: 10,
+        dexterity: 10,
+        initiative: 10,
+    }),,,,new Terrain(),new Terrain()];
 Board.init(TestBoard);
 
 class TurnHandler {

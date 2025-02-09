@@ -32,6 +32,8 @@ class PrimaryStat extends Stat {
         this.calculateStats(target);
     }
 
+    calculateStats() {};
+
     // Positive number to increase and negative number to decrease
     alterPermanent(value, target) {
         this.permanent += value;

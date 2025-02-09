@@ -37,7 +37,6 @@ class Piece extends Entity {
         };
         this.movementPoints = 3;
         this.range = 5;
-        /*
         this.secondaryStats = {
             dodgeChance: new ChanceStat('DodgeChance'),
             parryChance: new ChanceStat('ParryChance'),
@@ -59,8 +58,21 @@ class Piece extends Entity {
             wisdom: new Wisdom(primaryStats.wisdom, this),
             dexterity: new Dexterity(primaryStats.dexterity, this),
             initiative: new Initiative(primaryStats.initiative, this),
-        };*/
-        this.temp.threat = 0;
+        };
+    }
+
+    exportPiece() {
+        return [this.name, this.title, 
+            {
+                strength: this.primaryStats.strength.permanent,
+                agility: this.primaryStats.agility.permanent,
+                stamina: this.primaryStats.stamina.permanent,
+                intelligence: this.primaryStats.intelligence.permanent,
+                wisdom: this.primaryStats.wisdom.permanent,
+                dexterity: this.primaryStats.dexterity.permanent,
+                initiative: this.primaryStats.initiative.permanent,
+                }
+            ]
     }
 
     select() {
@@ -96,6 +108,7 @@ class PlayerPiece extends Piece {
         super(name, title, primaryStats, abilities, passives);
         this.objType = 'PlayerPiece';
         this.playerControlled = true;
+        this.temp.threat = 0;
     }
 }
 

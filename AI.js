@@ -57,6 +57,10 @@ class AIPrototype {
     monteCarloMove() {
         const gameState = new GameState(Board.exportBoard(), 'enemy');
         
+        for (const move of gameState.getPossibleMoves()) {
+            if (gameState.checkWinCondition(move[1])) return ['movement', move[0], move[1]];
+        }
+
         const mcts = new MonteCarloTreeSearch(gameState);
         const bestMove = mcts.runSearch();
 
@@ -138,8 +142,8 @@ class TreeNode {
     
     selectChild() {
         return this.children.reduce((bestChild, child) => {
-            const exploitation = child.wins / (child.visits * this.explorationConstant);
-            const exploration = Math.sqrt(Math.log(this.visits) / child.visits);
+            const exploitation = child.wins / child.visits;
+            const exploration = this.explorationConstant * Math.sqrt(Math.log(this.visits) / child.visits);
             const uct = exploitation + exploration;
 
             if(uct > bestChild.uct) {
@@ -175,7 +179,7 @@ class TreeNode {
             const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
             currentState.play(randomMove);
             if(currentState.checkWinCondition()) {
-                return 1 + (maxDepth - depth) / (maxDepth * 2);
+                return 1 + Math.round((maxDepth - depth) / (maxDepth));
             };
             depth++;
         }
@@ -229,14 +233,13 @@ class MonteCarloTreeSearch {
         }
 
         console.log(`Completed ${iterations} iterations in ${Date.now() - startTime}ms`);
-        console.log(this.getBestMove());
         return this.getBestMove();
     }
 
     getBestMove() {
         if(this.root.children.length === 0) return false;
         return this.root.children.reduce((best, child) =>
-            child.visits > best.visits ? child : best
+            child.wins > best.wins ? child : best
         ).state.getLastMove();
     }
 }
