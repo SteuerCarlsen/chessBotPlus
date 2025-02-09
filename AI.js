@@ -138,9 +138,9 @@ class TreeNode {
     
     selectChild() {
         return this.children.reduce((bestChild, child) => {
-            const exploitation = child.wins / child.visits;
+            const exploitation = child.wins / (child.visits * this.explorationConstant);
             const exploration = Math.sqrt(Math.log(this.visits) / child.visits);
-            const uct = exploitation + this.explorationConstant * exploration;
+            const uct = exploitation + exploration;
 
             if(uct > bestChild.uct) {
                 return {node: child, uct: uct};
@@ -169,10 +169,14 @@ class TreeNode {
         let depth = 0;
         while(depth < maxDepth) {
             const possibleMoves = currentState.getPossibleMoves();
-            if(possibleMoves.length === 0) return 0;
+            if(possibleMoves.length === 0) {
+                return 0
+            };
             const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
             currentState.play(randomMove);
-            if(currentState.checkWinCondition()) return 1;
+            if(currentState.checkWinCondition()) {
+                return 1 + (maxDepth - depth) / (maxDepth * 2);
+            };
             depth++;
         }
         return 0;
