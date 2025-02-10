@@ -81,15 +81,14 @@ const NeighborMap = calculateNeighbors()
 
 class BoardPrototype {
     constructor() {
-        this.boardArray = new Array(64);
-        this.simpleMoveBoard = new Uint8Array();
-        this.simpleLOSBoard = new Uint8Array();
+        this.boardArray = null;
+        this.simpleMoveBoard = null;
+        this.simpleLOSBoard = null;
         this.neighborMap = new Array(64);
         this.coordinateMap = CoordinateMap;
         this.losLineMap = LOSLineMap;
-        this.losLineMap = new Array(64).fill(null).map(() => new Array(64).fill(null));
-        this.calculatedSquares = new Array(64).fill(0);
-        this.rangeMap = new Array(64).fill(false);
+        this.calculatedSquares = null;
+        this.rangeMap = null;
         this.playerPieces = [];
         this.enemyPieces = [];
         this.distance = null;

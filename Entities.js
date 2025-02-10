@@ -63,7 +63,7 @@ class Piece extends Entity {
 
     exportPiece() {
         return [this.name, this.title, 
-            {
+                {
                 strength: this.primaryStats.strength.permanent,
                 agility: this.primaryStats.agility.permanent,
                 stamina: this.primaryStats.stamina.permanent,
@@ -71,7 +71,8 @@ class Piece extends Entity {
                 wisdom: this.primaryStats.wisdom.permanent,
                 dexterity: this.primaryStats.dexterity.permanent,
                 initiative: this.primaryStats.initiative.permanent,
-                }
+                },
+                this.abilities,
             ]
     }
 

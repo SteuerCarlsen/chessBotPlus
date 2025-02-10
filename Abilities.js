@@ -1,6 +1,7 @@
 // Overall Ability Class used to gather all components
 class Ability {
-    constructor(components) {
+    constructor(components, range) {
+        this.range = range;
         for (const key in components) {
             this.addComponent(key, components[key]);
         }
@@ -19,16 +20,20 @@ class Ability {
         return this?.[key];
     }
 
+    getRange(index, board = Board) {
+        return board.getRangeMap(index, this.range, true);
+    }
+
     static use() {}
 }
 
 // Ability Classes for abilities with same method needs (like a physical attack, a buff, etc.)
 class PhysicalAbility extends Ability {
-    constructor(components) {
-        super(components);
+    constructor(components, range) {
+        super(components, range);
     }
 
-    use() {
+    use(actor, target) {
         if (this.hasComponent('PhysicalHitGuaranteedComp') || Math.random() <= this.physicalHitComp.hitChance) {
             console.log('Hit for ' + this.physicalDamageComp.damage);
         }
@@ -64,4 +69,4 @@ const weaponHit = new PhysicalAbility({
     PhysicalDamageComp: 10,
     PhysicalHitComp: 0.5,
     PhysicalHitGuaranteedComp
-});
+}, 1);

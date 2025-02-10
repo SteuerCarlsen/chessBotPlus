@@ -1,20 +1,27 @@
 class AIPrototype {
     constructor(type) {
         this.type = type;
+        this.gameState = null;
+        this.possibleActions = this.gameState.getPossibleActions();
     }
     
     startTurn() {
-        let move = null;
+        this.gameState = new GameState(Board, 'enemy');
+        let action = null;
         if(this.type === 'monteCarlo') {
-            move = this.monteCarloMove();
+            action = this.monteCarloMove();
         } else if (this.type === 'random') {
-            move = this.randomMove();
+            action = this.randomMove();
         } else if (this.type === 'chase') {
-            move = this.chaseMove();
+            action = this.chaseMove();
         }
-        if (move != false) {
-            if (move[0] === 'movement') {
-                Board.boardArray[move[1]].move(move[2], Board)
+        if (action != false) {
+            const actingPiece = Board.boardArray[action[1]];
+            if (action[0] === 'movement') {
+                actingPiece.move(action[2], Board)
+                CurrentCombat.endTurn();
+            } else if (action[0] === 'ability') {
+                actingPiece.abilities[action[3]].use(actingPiece, Board.boardArray[action[2]]);
                 CurrentCombat.endTurn();
             }
         } else {
@@ -22,21 +29,10 @@ class AIPrototype {
         }
     }
 
-    getPossibleMoves() {
-        let possibleMoves = [];
-        Board.enemyPieces.forEach(piece => {
-            piece.getMovementRange().forEach(move => {
-                possibleMoves.push([piece.temp.index, move]);
-            })
-        })
-        return possibleMoves;
-    }
-
-    randomMove() {
-        const possibleMoves = this.getPossibleMoves();
-        const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-        if (randomMove != undefined) {
-            return ['movement', randomMove[0], randomMove[1]];
+    randomAction() {
+        const randomAction = this.possibleActions[Math.floor(Math.random() * this.possibleActions.length)];
+        if (randomAction != undefined) {
+            return randomAction;
         }
         return false;
     }
@@ -44,50 +40,65 @@ class AIPrototype {
     chaseMove() {
         const target = Board.playerPieces[0].temp.index;
         let moveArray = new Array(3).fill(99)
-        let possibleMoves = this.getPossibleMoves();
-        possibleMoves.forEach(move =>{
-            let distance = Board.calculateMoveDistanceWrapper(move, target);
-            if (distance < moveArray[2]){
-                moveArray = [move[0], move[1], distance]
+        this.possibleActions.forEach(move =>{
+            if (move[0] === 'movement') {
+                let distance = Board.calculateMoveDistanceWrapper(move, target);
+                if (distance < moveArray[3]){
+                    moveArray = move.push(distance);
+                }
             }
         })
-        return ['movement', moveArray[0], moveArray[1]]
+        return moveArray;
     }
 
     monteCarloMove() {
-        const gameState = new GameState(Board.exportBoard(), 'enemy');
-        
-        for (const move of gameState.getPossibleMoves()) {
-            if (gameState.checkWinCondition(move[1])) return ['movement', move[0], move[1]];
+        for (const action of this.possibleActions) {
+            if (this.gameState.checkWinCondition()) return action;
         }
 
-        const mcts = new MonteCarloTreeSearch(gameState);
-        const bestMove = mcts.runSearch();
+        const gameState = new GameState(Board.exportBoard(), 'enemy');
 
-        if(!bestMove) return false;
-        return ['movement', bestMove[0], bestMove[1]];
+        const mcts = new MonteCarloTreeSearch(gameState);
+        const bestAction = mcts.runSearch();
+
+        if(!bestAction) return false;
+        return bestAction;
     }
 }
 
 class GameState {
     constructor(board, currentPlayer) {
-        this.board = new BoardPrototype();
-        this.board.init(board, false);
-        this.possibleMoves = this.getPossibleMoves();
+        if(board instanceof BoardPrototype) {
+            this.board = board;
+        } else {
+            this.board = new BoardPrototype();
+            this.board.init(board, false);
+        }
+        this.possibleActions = this.getPossibleActions();
         this.currentPlayer = currentPlayer;
-        this.lastMove = null;
+        this.lastAction = null;
     }
     
-    getPossibleMoves() {
-        let possibleMoves = [];
+    getPossibleActions() {
+        let possibleActions = [];
         let pieces = this.currentPlayer === 'player' ? this.board.playerPieces : this.board.enemyPieces;
         pieces.forEach(piece => {
             let moves = piece.getMovementRange(this.board);
             moves.forEach(move => {
-                possibleMoves.push([piece.temp.index, move]);
+                possibleActions.push(['movement', piece.temp.index, move]);
+            })
+            piece.abilities.forEach((ability, abilityKey) => {
+                let range = ability.getRange(piece.temp.index, this.board);
+                range.forEach(targetIndex => {
+                    if (this.currentPlayer === 'player' && this.board.boardArray[targetIndex] instanceof EnemyPiece) {
+                        possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
+                    } else if (this.currentPlayer === 'enemy' && this.board.boardArray[targetIndex] instanceof PlayerPiece) {
+                        possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
+                    } 
+                })
             })
         })
-        return possibleMoves;
+        return possibleActions;
     }
     
     clone() {
@@ -97,28 +108,24 @@ class GameState {
         )
     }
 
-    play(move) {
-        this.board.boardArray[move[0]].move(move[1], this.board, false);
-        this.lastMove = move;
+    play(action) {
+        const actingPiece = this.board.boardArray[action[1]];
+        if (action[0] === 'movement') {
+            actingPiece.move(move[2], this.board, false);
+        } else if (action[0] === 'ability') {
+            actingPiece.abilities[action[3]].use(actingPiece, this.board.boardArray[action[2]]);
+        }
+        this.lastAction = action;
         this.currentPlayer = this.currentPlayer === 'player' ? 'enemy' : 'player';
     }
 
-    getLastMove() {
-        return this.lastMove;
+    getLastAction() {
+        return this.lastAction;
     }
 
-    checkWinCondition(pieceIndex) {
-        if (pieceIndex === undefined) {
-            for (const piece of this.board.enemyPieces) {
-                for (const neighborIndex of NeighborMap[piece.temp.index]) {
-                    const neighborPiece = this.board.boardArray[neighborIndex];
-                    if (neighborPiece instanceof PlayerPiece) {
-                        return true;
-                    }
-                }
-            }
-        } else {
-            for (const neighborIndex of NeighborMap[pieceIndex]) {
+    checkWinCondition() {
+        for (const piece of this.board.enemyPieces) {
+            for (const neighborIndex of NeighborMap[piece.temp.index]) {
                 const neighborPiece = this.board.boardArray[neighborIndex];
                 if (neighborPiece instanceof PlayerPiece) {
                     return true;
@@ -136,7 +143,7 @@ class TreeNode {
         this.children = [];         // Next possible positions
         this.wins = 0;             // How many wins we got through this position
         this.visits = 0;           // How many times we tried this position
-        this.untriedMoves = state.getPossibleMoves();  // Moves we haven't tried yet
+        this.untriedActions = state.getPossibleActions();  // Moves we haven't tried yet
         this.explorationConstant = 1.41;
     }
     
@@ -154,12 +161,12 @@ class TreeNode {
     }
 
     expand() {
-        if(this.untriedMoves.length === 0) return null;
-        const moveIndex = Math.floor(Math.random() * this.untriedMoves.length);
-        const move = this.untriedMoves.splice(moveIndex, 1)[0];
+        if(this.untriedActions.length === 0) return null;
+        const actionIndex = Math.floor(Math.random() * this.untriedActions.length);
+        const action = this.untriedActions.splice(actionIndex, 1)[0];
 
         const nextState = this.state.clone();
-        nextState.play(move);
+        nextState.play(action);
 
         const child = new TreeNode(nextState);
         child.parent = this;
@@ -172,12 +179,12 @@ class TreeNode {
         let currentState = this.state.clone();
         let depth = 0;
         while(depth < maxDepth) {
-            const possibleMoves = currentState.getPossibleMoves();
-            if(possibleMoves.length === 0) {
+            const possibleActions = currentState.getPossibleActions();
+            if(possibleActions.length === 0) {
                 return 0
             };
-            const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-            currentState.play(randomMove);
+            const randomAction = possibleActions[Math.floor(Math.random() * possibleActions.length)];
+            currentState.play(randomAction);
             if(currentState.checkWinCondition()) {
                 return 1 + Math.round((maxDepth - depth) / (maxDepth));
             };
@@ -196,7 +203,7 @@ class TreeNode {
     }
 
     isFullyExpanded() {
-        return this.untriedMoves.length === 0;
+        return this.untriedActions.length === 0;
     }
 
     isTerminal() {
@@ -233,13 +240,13 @@ class MonteCarloTreeSearch {
         }
 
         console.log(`Completed ${iterations} iterations in ${Date.now() - startTime}ms`);
-        return this.getBestMove();
+        return this.getBestAction();
     }
 
-    getBestMove() {
+    getBestAction() {
         if(this.root.children.length === 0) return false;
         return this.root.children.reduce((best, child) =>
             child.wins > best.wins ? child : best
-        ).state.getLastMove();
+        ).state.getLastAction();
     }
 }
