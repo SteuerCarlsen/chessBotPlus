@@ -208,28 +208,33 @@ class RangeSecondaryStat extends SecondaryStat {
 class ResourceStat extends Stat {
     constructor(visualId) {
         super(0, visualId);
+        this.currentValue = 0;
     }
 
     updateValue(value) {
         this.permanent = value;
-        this.value = this.getTotal();
+        this.currentValue = this.getTotal();
     }
 
     reduce(value) {
-        this.value -= value;
-        if (this.value <= 0) {
+        this.currentValue -= value;
+        if (this.currentValue <= 0) {
             this.zeroed();
         }
         this.updateVisual();
-        return this.value;
+        return this.currentValue;
     }
 
     regain(value) {
-        if (this.value + value > this.getTotal()) {
-            this.value = this.getTotal();
+        if (this.currentValue + value > this.getTotal()) {
+            this.currentValue = this.getTotal();
         } else {
-            this.value += value;
+            this.currentValue += value;
         }
+    }
+
+    getCurrentValue() {
+        return this.currentValue;
     }
 
     static zeroed() {}

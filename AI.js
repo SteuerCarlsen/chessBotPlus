@@ -123,14 +123,30 @@ class GameState {
         return this.lastAction;
     }
 
+    isTerminal() {
+        return this.checkWinCondition() || this.checkLossCondition();
+    }
+
     checkWinCondition() {
-        for (const piece of this.board.enemyPieces) {
-            for (const neighborIndex of NeighborMap[piece.temp.index]) {
-                const neighborPiece = this.board.boardArray[neighborIndex];
-                if (neighborPiece instanceof PlayerPiece) {
-                    return true;
-                }
-            }
+        let totalHealth = 0;
+        this.board.playerPiecesPieces.forEach(piece => {
+            totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
+        });
+
+        if(totalHealth <= 0) {
+            return true;
+        }
+        return false;
+    }
+
+    checkLossCondition() {
+        let totalHealth = 0;
+        this.board.enemyPieces.forEach(piece => {
+            totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
+        });
+
+        if(totalHealth <= 0) {
+            return true;
         }
         return false;
     }
@@ -188,6 +204,9 @@ class TreeNode {
             if(currentState.checkWinCondition()) {
                 return 1 + Math.round((maxDepth - depth) / (maxDepth));
             };
+            if(currentState.checkLossCondition()) {
+                return 0;
+            }
             depth++;
         }
         return 0;
@@ -207,7 +226,7 @@ class TreeNode {
     }
 
     isTerminal() {
-        return this.state.checkWinCondition();
+        return this.state.isTerminal();
     }
 }
 

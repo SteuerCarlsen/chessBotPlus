@@ -17,30 +17,67 @@ class VisualElement {
         const img = `<img src='${newImg}' onclick='Inventory.Bag${bag}.positionClick(${this.position})'>`;
         document.getElementById(this.id).innerHTML = img;
     }
+
+    addEventListener(event, func) {
+        document.getElementById(this.id).addEventListener(event, func);
+    }
+
+    addClass(className) {
+        document.getElementById(this.id).classList.add(className);
+    }
+
+    removeClass(className) {
+        document.getElementById(this.id).classList.remove(className);
+    }
+
+    clearClass() {
+        document.getElementById(this.id).className = '';
+    }
 }
 
 // VisualBoard holds all visuals for the Board
 const VisualBoard = {
     contents: {},
+
     init(size) {
         for (let i = 0; i < size; i++) {
             const localValue = i;
             this.contents['Square' + localValue] = new VisualElement('Square' + localValue, localValue);
+            this.contents['Square' + localValue].addEventListener('click', () => {
+                Board.selectSquare(localValue);
+            });
         }
     },
+
     refresh() {
         Board.boardArray.forEach((value, index) => {
             this.updateSquare(index, value);
         });
     },
+
     updateSquare(index, value) {
-        let content = `<div class='undefinedPiece' onclick='Board.selectSquare(${index})'>` + index + `</div>`;
-        if (value != undefined && value instanceof Entity) {
-            content = `<div class='${value.objType}' onclick='Board.selectSquare(${index})'>` + index + `</div>`;
-        } else if (value == "RG") {
-            content = `<div class='Range' onclick='Board.selectSquare(${index})'>` + index + `</div>`;
+        this.contents['Square' + index].clearClass();
+        this.contents['Square' + index].addClass('Square');
+        switch (value) {
+            case null:
+                this.contents['Square' + index].addClass('EmptySquare');
+                break;
+            case 'player':
+                this.contents['Square' + index].addClass('PlayerPiece');
+                break;
+            case 'enemy':
+                this.contents['Square' + index].addClass('EnemyPiece');
+                break;
+            case 'terrain':
+                this.contents['Square' + index].addClass('Terrain');
+                break;
+            case 'RG':
+                this.contents['Square' + index].addClass('Range');
+                break;
+            case 'PA':
+                this.contents['Square' + index].addClass('PlayerArea');
+                break;
         }
-        this.contents['Square' + index].updateValue(content);
     }
 };
 

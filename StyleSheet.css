@@ -22,7 +22,13 @@
     background-color: lightgreen;
 }
 
-.undefinedPiece {
+.PlayerArea {
+    height: 83px;
+    width: 83px;
+    background-color: lightblue;
+}
+
+.EmptySquare {
     height: 83px;
     width: 83px;
     background-color: white;
