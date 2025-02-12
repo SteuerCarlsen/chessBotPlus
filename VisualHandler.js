@@ -58,19 +58,28 @@ const VisualBoard = {
     updateSquare(index, value) {
         this.contents['Square' + index].clearClass();
         this.contents['Square' + index].addClass('Square');
+
+        if(value == undefined){
+            this.contents['Square' + index].addClass('EmptySquare');
+            return
+        }
+
+        if (value instanceof PlayerPiece) {
+            this.contents['Square' + index].addClass('PlayerPiece');
+            return;
+        }
+
+        if (value instanceof EnemyPiece) {
+            this.contents['Square' + index].addClass('EnemyPiece');
+            return;
+        }
+
+        if (value instanceof Terrain) {
+            this.contents['Square' + index].addClass('Terrain');
+            return;
+        }
+
         switch (value) {
-            case null:
-                this.contents['Square' + index].addClass('EmptySquare');
-                break;
-            case 'player':
-                this.contents['Square' + index].addClass('PlayerPiece');
-                break;
-            case 'enemy':
-                this.contents['Square' + index].addClass('EnemyPiece');
-                break;
-            case 'terrain':
-                this.contents['Square' + index].addClass('Terrain');
-                break;
             case 'RG':
                 this.contents['Square' + index].addClass('Range');
                 break;
@@ -78,6 +87,7 @@ const VisualBoard = {
                 this.contents['Square' + index].addClass('PlayerArea');
                 break;
         }
+        return;
     }
 };
 

@@ -2,11 +2,12 @@ class AIPrototype {
     constructor(type) {
         this.type = type;
         this.gameState = null;
-        this.possibleActions = this.gameState.getPossibleActions();
+        this.possibleActions = null;
     }
     
     startTurn() {
         this.gameState = new GameState(Board, 'enemy');
+        this.possibleActions = this.gameState.getPossibleActions();
         let action = null;
         if(this.type === 'monteCarlo') {
             action = this.monteCarloMove();
@@ -87,16 +88,18 @@ class GameState {
             moves.forEach(move => {
                 possibleActions.push(['movement', piece.temp.index, move]);
             })
-            piece.abilities.forEach((ability, abilityKey) => {
-                let range = ability.getRange(piece.temp.index, this.board);
-                range.forEach(targetIndex => {
-                    if (this.currentPlayer === 'player' && this.board.boardArray[targetIndex] instanceof EnemyPiece) {
-                        possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
-                    } else if (this.currentPlayer === 'enemy' && this.board.boardArray[targetIndex] instanceof PlayerPiece) {
-                        possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
-                    } 
+            if(piece.abilities != undefined && piece.abilities.length > 0){
+                piece.abilities.forEach((ability, abilityKey) => {
+                    let range = ability.getRange(piece.temp.index, this.board);
+                    range.forEach(targetIndex => {
+                        if (this.currentPlayer === 'player' && this.board.boardArray[targetIndex] instanceof EnemyPiece) {
+                            possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
+                        } else if (this.currentPlayer === 'enemy' && this.board.boardArray[targetIndex] instanceof PlayerPiece) {
+                            possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
+                        } 
+                    })
                 })
-            })
+            }
         })
         return possibleActions;
     }
@@ -129,7 +132,7 @@ class GameState {
 
     checkWinCondition() {
         let totalHealth = 0;
-        this.board.playerPiecesPieces.forEach(piece => {
+        this.board.playerPieces.forEach(piece => {
             totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
         });
 

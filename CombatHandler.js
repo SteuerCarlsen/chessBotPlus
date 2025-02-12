@@ -544,4 +544,4 @@ class TurnHandler {
     }
 }
 
-const CurrentCombat = new TurnHandler();
+const CurrentCombat = new TurnHandler(Boss1);
