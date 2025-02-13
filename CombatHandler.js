@@ -329,8 +329,9 @@ class Piece extends Entity {
             meleeDamage: new RangeStat('MeleeDamage'),
             armor: new FlatStat('Armor'),
         };
+        //Beware that this is manually set for now
         this.ressourceStats = {
-            health: new HealthStat(),
+            health: new HealthStat(100)
         };
         this.primaryStats = {
             strength: new Strength(primaryStats.strength, this),
@@ -444,9 +445,6 @@ class GameState {
             this.board.init(board, false);
         }
         this.isRealGameState = isRealGameState;
-        if(this.isRealGameState) this.randomizeTurn;
-        this.possibleActions = this.getPossibleActions();
-        this.currentPlayer = currentPlayer;
         this.lastAction = null;
         this.selectedPiece = null;
         this.targetedPiece = null;
@@ -457,9 +455,22 @@ class GameState {
     }
 
     init(enemyEncounter) {
-        this.playerTimeLeft = enemyEncounter.playerTotalTimeLimit;
+        /*this.playerTimeLeft = enemyEncounter.playerTotalTimeLimit;
         this.enemyTimeLeft = enemyEncounter.enemyTotalTimeLimit;
-        this.enemyAI = new AIPrototype(enemyEncounter.AI);
+        this.enemyAI = new AIPrototype(enemyEncounter.AI);*/
+        this.enemyAI = new AIPrototype('monteCarlo');
+    }
+
+    //Randomized who's turn it is at the start of the game
+    randomizeTurn() {
+        console.log('Randomizing turn');
+        if (Math.random() >= 0.5) {
+            console.log('Player goes first');
+            this.currentPlayer = 'player';
+        } else {
+            console.log('Enemy goes first');
+            this.currentPlayer = 'enemy';
+        }
     }
 
     start() {
@@ -468,6 +479,9 @@ class GameState {
             return;
         }
         console.log("Game starting");
+        if (this.isRealGameState) {
+            this.randomizeTurn();
+        }
         this.started = true;
         this.totalTimer = setInterval(() => {
             if (this.currentTurn === 'player') {
@@ -486,20 +500,26 @@ class GameState {
     }
 
     advanceTurn() {
-        const Terminal = this.isTerminal();
-        if(Terminal[0] || Terminal[1]){
-            this.gameEnd();
-            return Terminal
+        if(this.isRealGameState){
+            const Terminal = this.isTerminal();
+            if(Terminal[0] || Terminal[1]){
+                this.gameEnd();
+                return Terminal
+            }
         }
-        if (this.currentAction++ === 0) {
+        if (++this.currentAction == 1) {
             this.turnStart();
-        } else if (this.currentAction === 1) {
+        } else if (this.currentAction == 2) {
             this.turnAction();
-        } else if (this.currentAction === 2) {
-            this.turnEnd();
-        }
-        if(this.currentAction >= this.actionOrder.length){
+        } else if (this.currentAction == 3) {
             this.currentAction = 0;
+            const Terminal = this.isTerminal();
+            if(Terminal[0] || Terminal[1]){
+                this.currentAction = 0;
+                this.gameEnd();
+                return Terminal
+            }
+            this.turnEnd();
         }
     }
 
@@ -530,30 +550,22 @@ class GameState {
     }
 
     turnEnd() {
-        this,this.currentPlayer = this.currentPlayer === 'player' ? 'enemy' : 'player';
+        this.currentPlayer = this.currentPlayer === 'player' ? 'enemy' : 'player';
         if(this.isRealGameState){
             this.selectedPiece = null;
             this.targetedPiece = null;
             requestAnimationFrame(() => {
                 setTimeout(() => {
-                    this.startTurn();
+                    this.advanceTurn();
                 }, 5);
             });
+        } else {
             this.advanceTurn();
         }
     }
 
     gameEnd() {
         clearInterval(this.totalTimer);
-    }
-
-    //Randomized who's turn it is at the start of the game
-    randomizeTurn() {
-        if (Math.random() >= 0.5) {
-            return 'player';
-        } else {
-            return 'enemy';
-        }
     }
 
     //Get array of possible actions for the current player
@@ -589,11 +601,11 @@ class GameState {
         )
     }
 
-    //Method to play the given action in the simulatio 
+    //Method to play the given action in the simulation
     play(action) {
         const actingPiece = this.board.boardArray[action[1]];
         if (action[0] === 'movement') {
-            actingPiece.move(move[2], this.board, false);
+            actingPiece.move(action[2], this.board, false);
         } else if (action[0] === 'ability') {
             actingPiece.abilities[action[3]].use(actingPiece, this.board.boardArray[action[2]]);
         }
@@ -614,21 +626,24 @@ class GameState {
     checkWinCondition(actor) {
         let totalHealth = 0;
         if(actor == 'enemy'){
-            this.board.playerPieces.forEach(piece => {
+            for(const piece of this.board.playerPieces){
                 totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
-                if(totalHealth > 0) {
+                if(totalHealth > 0){
                     return false;
                 }
-            });
+            }
             return true;
         } else {
-            this.board.enemyPieces.forEach(piece => {
+            for(const piece of this.board.enemyPieces){
                 totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
-                if(totalHealth > 0) {
+                if(totalHealth > 0){
                     return false;
                 }
-            });
+            }
             return true;
         }
     }
 }
+
+const CurrentCombat = new GameState(Board, true);
+CurrentCombat.init();

@@ -8,7 +8,7 @@ const Factor = {
     meleeCriticalFactor: 2,
 };
 
-// Base class for Stats to make the same methods available to all stats
+// Base class for Stats to make the same methods avaislable to all stats
 class Stat {
     constructor(permanent, visualId, tempFlat = 0, tempPct = 0) {
         this.permanent = permanent;
@@ -238,18 +238,25 @@ class ResourceStat extends Stat {
     }
 
     static zeroed() {}
+
+    static calculateStats() {}
 }
 
 // All Resource Stats
 class HealthStat extends ResourceStat {
-    constructor() {
+    constructor(value) {
         super('Health');
+        this.currentValue = value;
     }
 
     zeroed() {}
 
-    updateVisual() {
+    updateVisual(target) {
         this.visualId.innerHTML = this.value;
+    }
+
+    calculateStats(target) {
+        target.ressourceStats.health.permanent = target.primaryStats.stamina.getTotal() * Factor.Stamina.health;
     }
 }
 

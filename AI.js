@@ -21,13 +21,11 @@ class AIPrototype {
             const actingPiece = Board.boardArray[action[1]];
             if (action[0] === 'movement') {
                 actingPiece.move(action[2], Board)
-                CurrentCombat.endTurn();
             } else if (action[0] === 'ability') {
                 actingPiece.abilities[action[3]].use(actingPiece, Board.boardArray[action[2]]);
-                CurrentCombat.endTurn();
             }
         } else {
-            CurrentCombat.endTurn()
+            CurrentCombat.advanceTurn()
         }
     }
     //Method to choose a random action from possible actions
@@ -126,8 +124,11 @@ class TreeNode {
             currentState.play(randomAction);
 
             const Terminal = currentState.advanceTurn();
-            if(Terminal[0]) return 1 + Math.round((maxDepth - depth) / (maxDepth));
-            if(Terminal[1]) return 0;
+
+            if(Terminal != undefined) {
+                if(Terminal[0]) return 1 + Math.round((maxDepth - depth) / (maxDepth));
+                if(Terminal[1]) return 0;
+            }
 
             depth++;
         }
