@@ -252,7 +252,7 @@ class BoardPrototype {
         //console.log(entity);
         if(entity === "RG"){
             CurrentCombat.selectedPiece.move(index);
-            CurrentCombat.endTurn();
+            CurrentCombat.advanceTurn();
             //console.log(`Selected square at index ${index} is within range`);
         } else if(entity){
             CurrentCombat.selectPiece(entity);
@@ -434,33 +434,32 @@ const TestBoard = [,,,,,,,
     }),,,,new Terrain(),new Terrain()];
 Board.init(TestBoard);
 
-class TurnHandler {
-    constructor(enemyEncounter, turnTimeLimit, totalTimeLimit) {
-        if (turnTimeLimit !== undefined) {
-            this.turnTimeLimit = turnTimeLimit;
+//GameState Prototype holds info and methods for the game states. Mainly used in Monte Carlo Tree Search.
+class GameState {
+    constructor(board, isRealGameState = false) {
+        if(board instanceof BoardPrototype) {
+            this.board = board;
+        } else {
+            this.board = new BoardPrototype();
+            this.board.init(board, false);
         }
-        if (totalTimeLimit !== undefined) {
-            this.totalTimeLimit = totalTimeLimit;
-            this.playerTimeLeft = totalTimeLimit;
-            this.enemyTimeLeft = totalTimeLimit;
-        }
-        this.currentTurn = this.randomizeTurn();
-        this.turnTimer = null;
-        this.totalTimer = null;
+        this.isRealGameState = isRealGameState;
+        if(this.isRealGameState) this.randomizeTurn;
+        this.possibleActions = this.getPossibleActions();
+        this.currentPlayer = currentPlayer;
+        this.lastAction = null;
         this.selectedPiece = null;
         this.targetedPiece = null;
-        this.enemyAI = new AIPrototype(enemyEncounter.AI);
         this.started = false;
+        this.actionOrder = ['start', 'action', 'end'];
+        this.currentAction = 0;
+        this.playerOrder = [];
     }
 
-    randomizeTurn() {
-        if (Math.random() >= 0.5) {
-            console.log('Player goes first');
-            return 'player';
-        } else {
-            console.log('Enemy goes first');
-            return 'enemy';
-        }
+    init(enemyEncounter) {
+        this.playerTimeLeft = enemyEncounter.playerTotalTimeLimit;
+        this.enemyTimeLeft = enemyEncounter.enemyTotalTimeLimit;
+        this.enemyAI = new AIPrototype(enemyEncounter.AI);
     }
 
     start() {
@@ -470,68 +469,55 @@ class TurnHandler {
         }
         console.log("Game starting");
         this.started = true;
-        this.startTurn();
-        if (this.totalTimeLimit !== undefined) {
-            this.startTotalTimer();
-        }
-    }
-
-    startTurn() {
-        //console.log(`${this.currentTurn}'s turn`);
-        if (this.currentTurn === 'enemy') {
-            this.enemyAI.startTurn();
-        }
-        if (this.turnTimeLimit !== undefined) {
-            this.turnTimer = setTimeout(() => {
-                this.endTurn();
-            }, this.turnTimeLimit * 1000);
-        }
-    }
-
-    startTotalTimer() {
         this.totalTimer = setInterval(() => {
             if (this.currentTurn === 'player') {
                 this.playerTimeLeft--;
                 if (this.playerTimeLeft <= 0) {
-                    this.loseCondition('player');
+                    this.gameEnd();
                 }
             } else {
                 this.enemyTimeLeft--;
                 if (this.enemyTimeLeft <= 0) {
-                    this.loseCondition('enemy');
+                    this.gameEnd();
                 }
             }
         }, 1000);
+        this.advanceTurn();
     }
 
-    endTurn() {
-        clearTimeout(this.turnTimer);
-        this.currentTurn = this.currentTurn === 'player' ? 'enemy' : 'player';
-        this.selectedPiece = null;
-        this.targetedPiece = null;
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                this.startTurn();
-            }, 5);
-        });
+    advanceTurn() {
+        const Terminal = this.isTerminal();
+        if(Terminal[0] || Terminal[1]){
+            this.gameEnd();
+            return Terminal
+        }
+        if (this.currentAction++ === 0) {
+            this.turnStart();
+        } else if (this.currentAction === 1) {
+            this.turnAction();
+        } else if (this.currentAction === 2) {
+            this.turnEnd();
+        }
+        if(this.currentAction >= this.actionOrder.length){
+            this.currentAction = 0;
+        }
     }
 
-    loseCondition(loser) {
-        clearTimeout(this.turnTimer);
-        clearInterval(this.totalTimer);
-        //console.log(`${loser} loses!`);
-        // Handle lose condition (e.g., end game, show message, etc.)
+    turnStart() {
+        this.advanceTurn();
     }
 
-    endGame() {
-        clearTimeout(this.turnTimer);
-        clearInterval(this.totalTimer);
-        //console.log('Game over');
-        // Handle end game (e.g., show final score, reset game, etc.)
+    turnAction() {
+        if(this.isRealGameState){
+            if(this.currentPlayer === 'enemy'){
+                this.enemyAI.startTurn();
+                this.advanceTurn();
+            }
+        }
     }
 
     selectPiece(entity) {
-        if (this.currentTurn === 'player') {
+        if (this.currentPlayer === 'player') {
             if (entity.playerControlled) {
                 this.selectedPiece = entity;
                 entity.select();
@@ -542,6 +528,107 @@ class TurnHandler {
             console.log('Not your turn');
         }
     }
-}
 
-const CurrentCombat = new TurnHandler(Boss1);
+    turnEnd() {
+        this,this.currentPlayer = this.currentPlayer === 'player' ? 'enemy' : 'player';
+        if(this.isRealGameState){
+            this.selectedPiece = null;
+            this.targetedPiece = null;
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    this.startTurn();
+                }, 5);
+            });
+            this.advanceTurn();
+        }
+    }
+
+    gameEnd() {
+        clearInterval(this.totalTimer);
+    }
+
+    //Randomized who's turn it is at the start of the game
+    randomizeTurn() {
+        if (Math.random() >= 0.5) {
+            return 'player';
+        } else {
+            return 'enemy';
+        }
+    }
+
+    //Get array of possible actions for the current player
+    getPossibleActions() {
+        let possibleActions = [];
+        let pieces = this.currentPlayer === 'player' ? this.board.playerPieces : this.board.enemyPieces;
+        pieces.forEach(piece => {
+            let moves = piece.getMovementRange(this.board);
+            moves.forEach(move => {
+                possibleActions.push(['movement', piece.temp.index, move]);
+            })
+            if(piece.abilities != undefined && piece.abilities.length > 0){
+                piece.abilities.forEach((ability, abilityKey) => {
+                    let range = ability.getRange(piece.temp.index, this.board);
+                    range.forEach(targetIndex => {
+                        if (this.currentPlayer === 'player' && this.board.boardArray[targetIndex] instanceof EnemyPiece) {
+                            possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
+                        } else if (this.currentPlayer === 'enemy' && this.board.boardArray[targetIndex] instanceof PlayerPiece) {
+                            possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
+                        } 
+                    })
+                })
+            }
+        })
+        return possibleActions;
+    }
+
+    //Method to clone the current game state for use in new nodes to simulate without affecting other nodes
+    clone() {
+        return new GameState(
+            this.board.exportBoard(),
+            this.currentPlayer,
+        )
+    }
+
+    //Method to play the given action in the simulatio 
+    play(action) {
+        const actingPiece = this.board.boardArray[action[1]];
+        if (action[0] === 'movement') {
+            actingPiece.move(move[2], this.board, false);
+        } else if (action[0] === 'ability') {
+            actingPiece.abilities[action[3]].use(actingPiece, this.board.boardArray[action[2]]);
+        }
+        this.lastAction = action;
+    }
+
+    //Method to get the last action played
+    getLastAction() {
+        return this.lastAction;
+    }
+
+    //Method to check if the game state is terminal (win or loss)
+    isTerminal() {
+        return [this.checkWinCondition('enemy'), this.checkWinCondition('player')];
+    }
+
+    //Checks the Win Condition (all player pieces are dead)
+    checkWinCondition(actor) {
+        let totalHealth = 0;
+        if(actor == 'enemy'){
+            this.board.playerPieces.forEach(piece => {
+                totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
+                if(totalHealth > 0) {
+                    return false;
+                }
+            });
+            return true;
+        } else {
+            this.board.enemyPieces.forEach(piece => {
+                totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
+                if(totalHealth > 0) {
+                    return false;
+                }
+            });
+            return true;
+        }
+    }
+}

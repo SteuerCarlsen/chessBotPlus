@@ -1,10 +1,11 @@
+//AI Prototype holds info and methods for the in-game AI controlling pieces
 class AIPrototype {
     constructor(type) {
         this.type = type;
         this.gameState = null;
         this.possibleActions = null;
     }
-    
+    //Method to start the AI's turn with moves chosen based on AI-type
     startTurn() {
         this.gameState = new GameState(Board, 'enemy');
         this.possibleActions = this.gameState.getPossibleActions();
@@ -29,7 +30,7 @@ class AIPrototype {
             CurrentCombat.endTurn()
         }
     }
-
+    //Method to choose a random action from possible actions
     randomAction() {
         const randomAction = this.possibleActions[Math.floor(Math.random() * this.possibleActions.length)];
         if (randomAction != undefined) {
@@ -37,29 +38,32 @@ class AIPrototype {
         }
         return false;
     }
-
+    //Chase down the closest player piece
     chaseMove() {
-        const target = Board.playerPieces[0].temp.index;
+        const targets = Board.playerPieces;
         let moveArray = new Array(3).fill(99)
         this.possibleActions.forEach(move =>{
             if (move[0] === 'movement') {
-                let distance = Board.calculateMoveDistanceWrapper(move, target);
-                if (distance < moveArray[3]){
-                    moveArray = move.push(distance);
-                }
+                targets.forEach(target => {
+                    let distance = Board.calculateMoveDistanceWrapper(move, target.temp.index);
+                    if (distance < moveArray[3]){
+                        moveArray = move.push(distance);
+                    }
+                })
+                
             }
         })
         return moveArray;
     }
-
-    monteCarloMove() {
+    //Choose action based on Monte Carlo Tree Search (action most likely to result in win)
+    monteCarloMove(timeLimit = 500, maxDepth = 100) {
         for (const action of this.possibleActions) {
-            if (this.gameState.checkWinCondition()) return action;
+            if (this.gameState.checkWinCondition('enemy')) return action;
         }
 
         const gameState = new GameState(Board.exportBoard(), 'enemy');
 
-        const mcts = new MonteCarloTreeSearch(gameState);
+        const mcts = new MonteCarloTreeSearch(gameState, timeLimit, maxDepth);
         const bestAction = mcts.runSearch();
 
         if(!bestAction) return false;
@@ -67,94 +71,7 @@ class AIPrototype {
     }
 }
 
-class GameState {
-    constructor(board, currentPlayer) {
-        if(board instanceof BoardPrototype) {
-            this.board = board;
-        } else {
-            this.board = new BoardPrototype();
-            this.board.init(board, false);
-        }
-        this.possibleActions = this.getPossibleActions();
-        this.currentPlayer = currentPlayer;
-        this.lastAction = null;
-    }
-    
-    getPossibleActions() {
-        let possibleActions = [];
-        let pieces = this.currentPlayer === 'player' ? this.board.playerPieces : this.board.enemyPieces;
-        pieces.forEach(piece => {
-            let moves = piece.getMovementRange(this.board);
-            moves.forEach(move => {
-                possibleActions.push(['movement', piece.temp.index, move]);
-            })
-            if(piece.abilities != undefined && piece.abilities.length > 0){
-                piece.abilities.forEach((ability, abilityKey) => {
-                    let range = ability.getRange(piece.temp.index, this.board);
-                    range.forEach(targetIndex => {
-                        if (this.currentPlayer === 'player' && this.board.boardArray[targetIndex] instanceof EnemyPiece) {
-                            possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
-                        } else if (this.currentPlayer === 'enemy' && this.board.boardArray[targetIndex] instanceof PlayerPiece) {
-                            possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
-                        } 
-                    })
-                })
-            }
-        })
-        return possibleActions;
-    }
-    
-    clone() {
-        return new GameState(
-            this.board.exportBoard(),
-            this.currentPlayer,
-        )
-    }
-
-    play(action) {
-        const actingPiece = this.board.boardArray[action[1]];
-        if (action[0] === 'movement') {
-            actingPiece.move(move[2], this.board, false);
-        } else if (action[0] === 'ability') {
-            actingPiece.abilities[action[3]].use(actingPiece, this.board.boardArray[action[2]]);
-        }
-        this.lastAction = action;
-        this.currentPlayer = this.currentPlayer === 'player' ? 'enemy' : 'player';
-    }
-
-    getLastAction() {
-        return this.lastAction;
-    }
-
-    isTerminal() {
-        return this.checkWinCondition() || this.checkLossCondition();
-    }
-
-    checkWinCondition() {
-        let totalHealth = 0;
-        this.board.playerPieces.forEach(piece => {
-            totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
-        });
-
-        if(totalHealth <= 0) {
-            return true;
-        }
-        return false;
-    }
-
-    checkLossCondition() {
-        let totalHealth = 0;
-        this.board.enemyPieces.forEach(piece => {
-            totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
-        });
-
-        if(totalHealth <= 0) {
-            return true;
-        }
-        return false;
-    }
-}
-
+//TreeNode Prototype holds info and methods for the nodes in the Monte Carlo Tree Search
 class TreeNode {
     constructor(state) {
         this.state = state;         // Current game position
@@ -165,7 +82,7 @@ class TreeNode {
         this.untriedActions = state.getPossibleActions();  // Moves we haven't tried yet
         this.explorationConstant = 1.41;
     }
-    
+    //Selects child node based on UCT (Upper Confidence Bound for Trees) formula
     selectChild() {
         return this.children.reduce((bestChild, child) => {
             const exploitation = child.wins / child.visits;
@@ -178,7 +95,7 @@ class TreeNode {
             return bestChild
         }, {node: this.children[0], uct: -Infinity}).node;
     }
-
+    //Expands the node by playing a random untried action
     expand() {
         if(this.untriedActions.length === 0) return null;
         const actionIndex = Math.floor(Math.random() * this.untriedActions.length);
@@ -193,7 +110,7 @@ class TreeNode {
 
         return child
     }
-
+    //Simulates the game from the current node to a terminal state
     simulate(maxDepth) {
         let currentState = this.state.clone();
         let depth = 0;
@@ -202,19 +119,21 @@ class TreeNode {
             if(possibleActions.length === 0) {
                 return 0
             };
+
+            currentState.advanceTurn();
+
             const randomAction = possibleActions[Math.floor(Math.random() * possibleActions.length)];
             currentState.play(randomAction);
-            if(currentState.checkWinCondition()) {
-                return 1 + Math.round((maxDepth - depth) / (maxDepth));
-            };
-            if(currentState.checkLossCondition()) {
-                return 0;
-            }
+
+            const Terminal = currentState.advanceTurn();
+            if(Terminal[0]) return 1 + Math.round((maxDepth - depth) / (maxDepth));
+            if(Terminal[1]) return 0;
+
             depth++;
         }
         return 0;
     }
-
+    //Backpropagates the result of the simulation to node and parent nodes
     backpropagate(result) {
         let node = this;
         while(node !== null) {
@@ -223,23 +142,25 @@ class TreeNode {
             node = node.parent;
         }
     }
-
+    //Checks if the node is fully expanded (all possible actions have been tried)
     isFullyExpanded() {
         return this.untriedActions.length === 0;
     }
-
+    //Checks if the node is terminal (win or loss)
     isTerminal() {
-        return this.state.isTerminal();
+        const Terminal = this.state.isTerminal();
+        return Terminal[0] || Terminal[1];
     }
 }
 
+//MonteCarloTreeSearch Prototype holds info and methods for the Monte Carlo Tree Search
 class MonteCarloTreeSearch {
-    constructor(initialState, timeLimit = 500, maxDepth = 25) {
+    constructor(initialState, timeLimit = 500, maxDepth = 100) {
         this.root = new TreeNode(initialState);
         this.timeLimit = timeLimit;
         this.maxDepth = maxDepth;
     }
-
+    //Runs the Monte Carlo Tree Search within the given parameters
     runSearch() {
         const startTime = Date.now();
         let iterations = 0;
@@ -247,6 +168,7 @@ class MonteCarloTreeSearch {
         while (Date.now() - startTime < this.timeLimit) {
             iterations++;
             let node = this.root;
+
             while(!node.isTerminal() && node.isFullyExpanded()) {
                 node = node.selectChild();
             }
@@ -261,10 +183,10 @@ class MonteCarloTreeSearch {
             node.backpropagate(result);
         }
 
-        console.log(`Completed ${iterations} iterations in ${Date.now() - startTime}ms`);
+        console.log(`Completed ${iterations} iterations`);
         return this.getBestAction();
     }
-
+    //Returns the action with most wins in the simulation
     getBestAction() {
         if(this.root.children.length === 0) return false;
         return this.root.children.reduce((best, child) =>

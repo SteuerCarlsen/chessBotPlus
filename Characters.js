@@ -1,3 +1,4 @@
+//Character class to hold information about characters outside the combat
 class Character {
   constructor(name, title) {
     this.name = name;
@@ -5,11 +6,13 @@ class Character {
   }
 }
 
+// Specific class for player characters to hold information like equipment, abilities, etc.
 class PlayerCharacter extends Character {
   constructor(name, title) {
     super(name, title);
   }
 
+  // Export the player character to a player piece for combat
   exportToCombat() {
     return new PlayerPiece(this.name, this.title)
   }
@@ -17,6 +20,7 @@ class PlayerCharacter extends Character {
   calculateStats() {}
 }
 
+// Specific class for enemy encounters to hold information like abilities, pieces, AI, etc.
 class EnemyEncounter extends Character {
   constructor(name, title, AI, board) {
     super(name, title);
