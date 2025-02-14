@@ -7,7 +7,7 @@ class AIPrototype {
     }
     //Method to start the AI's turn with moves chosen based on AI-type
     startTurn() {
-        this.gameState = new GameState(Board, 'enemy');
+        this.gameState = new SimulationState(Board, 'enemy');
         this.possibleActions = this.gameState.getPossibleActions();
         let action = null;
         if(this.type === 'monteCarlo') {
@@ -59,9 +59,7 @@ class AIPrototype {
             if (this.gameState.checkWinCondition('enemy')) return action;
         }
 
-        const gameState = new GameState(Board.exportBoard(), 'enemy');
-
-        const mcts = new MonteCarloTreeSearch(gameState, timeLimit, maxDepth);
+        const mcts = new MonteCarloTreeSearch(Board.exportBoard(), 'enemy', timeLimit, maxDepth);
         const bestAction = mcts.runSearch();
 
         if(!bestAction) return false;
@@ -126,7 +124,7 @@ class TreeNode {
             const Terminal = currentState.advanceTurn();
 
             if(Terminal != undefined) {
-                if(Terminal[0]) return 1 + Math.round((maxDepth - depth) / (maxDepth));
+                if(Terminal[0]) return 1;
                 if(Terminal[1]) return 0;
             }
 
@@ -156,42 +154,69 @@ class TreeNode {
 
 //MonteCarloTreeSearch Prototype holds info and methods for the Monte Carlo Tree Search
 class MonteCarloTreeSearch {
-    constructor(initialState, timeLimit = 500, maxDepth = 100) {
-        this.root = new TreeNode(initialState);
+    constructor(initialBoard, initialPlayer, timeLimit = 500, maxDepth = 100) {
+        this.initialBoard = initialBoard;
+        this.initialPlayer = initialPlayer;
+        this.initialSate = new SimulationState(initialBoard, initialPlayer);
+        this.initialPossibleActions = this.initialSate.getPossibleActions();
         this.timeLimit = timeLimit;
         this.maxDepth = maxDepth;
+        this.workers = [];
+        this.numWorkers = Math.min(navigator.hardwareConcurrency, 4);
+        this.actionsPerWorker = Math.ceil(this.initialPossibleActions.length / this.numWorkers);
+        this.initWorkers();
+    }
+
+    initWorkers() {
+        for (let i = 0; i < this.numWorkers; i++) {
+            const worker = new Worker('mcts-worker.js');
+            this.workers.push(worker);
+        }
     }
     //Runs the Monte Carlo Tree Search within the given parameters
-    runSearch() {
-        const startTime = Date.now();
-        let iterations = 0;
+    async runSearch() {
+        const promises = this.workers.map((worker, index) => {
+            const startIndex = index * this.actionsPerWorker;
+            const endIndex = Math.min(startIndex + this.actionsPerWorker, this.initialPossibleActions.length);
+            return new Promise(resolve => {
+                worker.postMessage({
+                    initialBoard: this.initialBoard,
+                    initialPlayer: this.initialPlayer,
+                    startIndex: startIndex,
+                    endIndex: endIndex,
+                    timeLimit: this.timeLimit,
+                    maxDepth: this.maxDepth
+                });
+                worker.onmessage = (e) => resolve(e.data);
+            })
+        });
 
-        while (Date.now() - startTime < this.timeLimit) {
-            iterations++;
-            let node = this.root;
+        const results = await Promise.all(promises);
 
-            while(!node.isTerminal() && node.isFullyExpanded()) {
-                node = node.selectChild();
-            }
-
-            if(!node.isTerminal()) {
-                node = node.expand();
-                if(node === null) continue;
-            }
-
-            const result = node.simulate(this.maxDepth);
-
-            node.backpropagate(result);
-        }
-
-        console.log(`Completed ${iterations} iterations`);
-        return this.getBestAction();
+        return this.getBestAction(results);
     }
+
     //Returns the action with most wins in the simulation
-    getBestAction() {
-        if(this.root.children.length === 0) return false;
-        return this.root.children.reduce((best, child) =>
-            child.wins > best.wins ? child : best
-        ).state.getLastAction();
+    getBestAction(results) {
+        let allActions = [];
+        let iterations = 0;
+        results.forEach(result => {
+            allActions = allActions.concat(result[0]);
+            iterations += result[1];
+        });
+
+        console.log(allActions)
+        let bestAction = null;
+        let bestScore = -Infinity;
+
+        for (const [action, score] of Object.entries(allActions)) {
+            if(score > bestScore) {
+                bestAction = action;
+                bestScore = score;
+            }
+        }
+        console.log(iterations)
+        console.log(bestAction, bestScore)
+        return bestAction;
     }
 }

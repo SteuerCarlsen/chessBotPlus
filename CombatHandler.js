@@ -127,11 +127,10 @@ class BoardPrototype {
             VisualBoard.init(size);
         }
         for (let i = 0; i < size; i++) {
-            this.updateSquare(i, board[i], updateVisual);
+            this.updateSquare(i, this.initSquare(board[i]), updateVisual);
         }
         this.boardArray.forEach((value, index) => {
             if (value) {
-                //console.log(value);
                 value.temp.index = index;
                 if (value.playerControlled) {
                     this.playerPieces.push(value);
@@ -267,17 +266,32 @@ class BoardPrototype {
         this.boardArray.forEach((value, key) =>{
             if(value != null && value != undefined){
                 if(value instanceof Terrain){
-                    exportResult[key] = new Terrain()
+                    exportResult[key] = ['terrain'];
                 } else if (value instanceof PlayerPiece){
-                    const pieceData = value.exportPiece()
-                    exportResult[key] = new PlayerPiece(pieceData[0], pieceData[1], pieceData[2])
+                    const pieceData = value.exportPiece();
+                    exportResult[key] = ['playerPiece', pieceData[0], pieceData[1], pieceData[2]];
                 } else if (value instanceof EnemyPiece){
-                    const pieceData = value.exportPiece()
-                    exportResult[key] = new EnemyPiece(pieceData[0], pieceData[1], pieceData[2])
+                    const pieceData = value.exportPiece();
+                    exportResult[key] = ['enemyPiece', pieceData[0], pieceData[1], pieceData[2]];
                 }
             }
         })
         return exportResult
+    }
+
+    initSquare(value) {
+        if (value === undefined || value === null) {
+            return null;
+        }
+        if(value[0] == "terrain"){
+            return new Terrain()
+        }
+        if (value[0] == "playerPiece"){
+            return new PlayerPiece(value[1], value[2], value[3])
+        }
+        if (value[0] == "enemyPiece"){
+            return new EnemyPiece(value[1], value[2], value[3])
+        }
     }
 }
 
@@ -404,109 +418,19 @@ class EnemyPiece extends Piece {
     }
 }
 
-const Board = new BoardPrototype()
-const TestBoard = [,,,,,,,
-    new PlayerPiece("Player Character","None",{ 
-    strength: 10,
-    agility: 10,
-    stamina: 10,
-    intelligence: 10,
-    wisdom: 10,
-    dexterity: 10,
-    initiative: 10,
-    }),,new Terrain(),,,,,new Terrain(),,,,,,,new Terrain(),,,,,new Terrain(),new Terrain(),new Terrain(),,,new Terrain(),,,,,new Terrain(),,,,,,new Terrain(),new Terrain(),,new Terrain(),,
-    new EnemyPiece("Enemy Character 2","None",{
-        strength: 10,
-        agility: 10,
-        stamina: 10,
-        intelligence: 10,
-        wisdom: 10,
-        dexterity: 10,
-        initiative: 10,
-    }),,,new Terrain(),,new Terrain(),,,,,,
-    new EnemyPiece("Enemy Character","None",{
-        strength: 10,
-        agility: 10,
-        stamina: 10,
-        intelligence: 10,
-        wisdom: 10,
-        dexterity: 10,
-        initiative: 10,
-    }),,,,new Terrain(),new Terrain()];
-Board.init(TestBoard);
-
 //GameState Prototype holds info and methods for the game states. Mainly used in Monte Carlo Tree Search.
 class GameState {
-    constructor(board, isRealGameState = false) {
-        if(board instanceof BoardPrototype) {
-            this.board = board;
-        } else {
-            this.board = new BoardPrototype();
-            this.board.init(board, false);
-        }
-        this.isRealGameState = isRealGameState;
-        this.lastAction = null;
-        this.selectedPiece = null;
-        this.targetedPiece = null;
-        this.started = false;
+    constructor() {
         this.actionOrder = ['start', 'action', 'end'];
         this.currentAction = 0;
         this.playerOrder = [];
     }
 
-    init(enemyEncounter) {
-        /*this.playerTimeLeft = enemyEncounter.playerTotalTimeLimit;
-        this.enemyTimeLeft = enemyEncounter.enemyTotalTimeLimit;
-        this.enemyAI = new AIPrototype(enemyEncounter.AI);*/
-        this.enemyAI = new AIPrototype('monteCarlo');
-    }
-
-    //Randomized who's turn it is at the start of the game
-    randomizeTurn() {
-        console.log('Randomizing turn');
-        if (Math.random() >= 0.5) {
-            console.log('Player goes first');
-            this.currentPlayer = 'player';
-        } else {
-            console.log('Enemy goes first');
-            this.currentPlayer = 'enemy';
-        }
-    }
-
-    start() {
-        if (this.started) {
-            console.log('Game already started');
-            return;
-        }
-        console.log("Game starting");
-        if (this.isRealGameState) {
-            this.randomizeTurn();
-        }
-        this.started = true;
-        this.totalTimer = setInterval(() => {
-            if (this.currentTurn === 'player') {
-                this.playerTimeLeft--;
-                if (this.playerTimeLeft <= 0) {
-                    this.gameEnd();
-                }
-            } else {
-                this.enemyTimeLeft--;
-                if (this.enemyTimeLeft <= 0) {
-                    this.gameEnd();
-                }
-            }
-        }, 1000);
-        this.advanceTurn();
-    }
-
     advanceTurn() {
-        if(this.isRealGameState){
-            const Terminal = this.isTerminal();
-            if(Terminal[0] || Terminal[1]){
-                this.gameEnd();
-                return Terminal
-            }
-        }
+        this.sharedTurnAdvance();
+    }
+
+    sharedTurnAdvance() {
         if (++this.currentAction == 1) {
             this.turnStart();
         } else if (this.currentAction == 2) {
@@ -528,44 +452,65 @@ class GameState {
     }
 
     turnAction() {
-        if(this.isRealGameState){
-            if(this.currentPlayer === 'enemy'){
-                this.enemyAI.startTurn();
-                this.advanceTurn();
-            }
-        }
-    }
-
-    selectPiece(entity) {
-        if (this.currentPlayer === 'player') {
-            if (entity.playerControlled) {
-                this.selectedPiece = entity;
-                entity.select();
-            } else {
-                this.targetedPiece = entity;
-            }
-        } else {
-            console.log('Not your turn');
-        }
+        return
     }
 
     turnEnd() {
+        this.sharedTurnEnd();
+    }
+
+    sharedTurnEnd() {
         this.currentPlayer = this.currentPlayer === 'player' ? 'enemy' : 'player';
-        if(this.isRealGameState){
-            this.selectedPiece = null;
-            this.targetedPiece = null;
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    this.advanceTurn();
-                }, 5);
-            });
-        } else {
-            this.advanceTurn();
-        }
+        this.advanceTurn();
     }
 
     gameEnd() {
         clearInterval(this.totalTimer);
+    }
+
+    //Method to check if the game state is terminal (win or loss)
+    isTerminal() {
+        return [this.checkWinCondition('enemy'), this.checkWinCondition('player')];
+    }
+
+    //Method to clone the current game state for use in new nodes to simulate without affecting other nodes
+    clone() {
+        return new SimulationState(
+            this.board.exportBoard(),
+            this.currentPlayer,
+        )
+    }
+
+    //Checks the Win Condition (all player pieces are dead)
+    checkWinCondition(actor) {
+        let totalHealth = 0;
+        if(actor == 'enemy'){
+            for(const piece of this.board.playerPieces){
+                totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
+                if(totalHealth > 0){
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            for(const piece of this.board.enemyPieces){
+                totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
+                if(totalHealth > 0){
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+}
+
+class SimulationState extends GameState {
+    constructor(board, player) {
+        super();
+        this.lastAction = null;
+        this.currentPlayer = player;
+        this.board = new BoardPrototype();
+        this.board.init(board, false);
     }
 
     //Get array of possible actions for the current player
@@ -593,14 +538,6 @@ class GameState {
         return possibleActions;
     }
 
-    //Method to clone the current game state for use in new nodes to simulate without affecting other nodes
-    clone() {
-        return new GameState(
-            this.board.exportBoard(),
-            this.currentPlayer,
-        )
-    }
-
     //Method to play the given action in the simulation
     play(action) {
         const actingPiece = this.board.boardArray[action[1]];
@@ -616,34 +553,103 @@ class GameState {
     getLastAction() {
         return this.lastAction;
     }
+}
 
-    //Method to check if the game state is terminal (win or loss)
-    isTerminal() {
-        return [this.checkWinCondition('enemy'), this.checkWinCondition('player')];
+class RealGameState extends GameState {
+    constructor(board) {
+        super();
+        if(board instanceof BoardPrototype) {
+            this.board = board;
+        } else {
+            this.board = new BoardPrototype();
+            this.board.init(board, false);
+        }
+        this.selectedPiece = null;
+        this.targetedPiece = null;
+        this.started = false;
+        this.currentPlayer = this.randomizeTurn();
+        this.init();
     }
 
-    //Checks the Win Condition (all player pieces are dead)
-    checkWinCondition(actor) {
-        let totalHealth = 0;
-        if(actor == 'enemy'){
-            for(const piece of this.board.playerPieces){
-                totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
-                if(totalHealth > 0){
-                    return false;
-                }
-            }
-            return true;
+    init(enemyEncounter) {
+        /*this.playerTimeLeft = enemyEncounter.playerTotalTimeLimit;
+        this.enemyTimeLeft = enemyEncounter.enemyTotalTimeLimit;
+        this.enemyAI = new AIPrototype(enemyEncounter.AI);*/
+        this.enemyAI = new AIPrototype('monteCarlo');
+    }
+
+    //Randomized who's turn it is at the start of the game
+    randomizeTurn() {
+        console.log('Randomizing turn');
+        if (Math.random() >= 0.5) {
+            console.log('Player goes first');
+            return 'player';
         } else {
-            for(const piece of this.board.enemyPieces){
-                totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
-                if(totalHealth > 0){
-                    return false;
+            console.log('Enemy goes first');
+            return 'enemy';
+        }
+    }
+
+    start() {
+        if (this.started) {
+            console.log('Game already started');
+            return;
+        }
+        console.log("Game starting");
+        this.started = true;
+        this.totalTimer = setInterval(() => {
+            if (this.currentTurn === 'player') {
+                this.playerTimeLeft--;
+                if (this.playerTimeLeft <= 0) {
+                    this.gameEnd();
+                }
+            } else {
+                this.enemyTimeLeft--;
+                if (this.enemyTimeLeft <= 0) {
+                    this.gameEnd();
                 }
             }
-            return true;
+        }, 1000);
+        this.advanceTurn();
+    }
+
+    advanceTurn() {
+        const Terminal = this.isTerminal();
+        if(Terminal[0] || Terminal[1]){
+            this.gameEnd();
+            return Terminal
+        }
+        this.sharedTurnAdvance();
+    }
+
+    turnAction() {
+        if(this.currentPlayer === 'enemy'){
+            this.enemyAI.startTurn();
+            this.advanceTurn();
+        }
+    }
+
+    turnEnd() {
+        this.selectedPiece = null;
+        this.targetedPiece = null;
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                this.sharedTurnEnd();
+            }, 5);
+        });
+
+    }
+
+    selectPiece(entity) {
+        if (this.currentPlayer === 'player') {
+            if (entity.playerControlled) {
+                this.selectedPiece = entity;
+                entity.select();
+            } else {
+                this.targetedPiece = entity;
+            }
+        } else {
+            console.log('Not your turn');
         }
     }
 }
-
-const CurrentCombat = new GameState(Board, true);
-CurrentCombat.init();
