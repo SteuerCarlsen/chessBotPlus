@@ -39,7 +39,7 @@ class AIPrototype {
     //Chase down the closest player piece
     chaseMove() {
         const targets = Board.playerPieces;
-        let moveArray = new Array(3).fill(99)
+        let moveArray = new Array(3).fill(Infinity)
         this.possibleActions.forEach(move =>{
             if (move[0] === 'movement') {
                 targets.forEach(target => {
@@ -165,7 +165,6 @@ class MonteCarloTreeSearch {
 
     initWorkers() {
         for (let i = 0; i < this.numWorkers; i++) {
-            console.log('Worker created')
             const worker = new Worker('mcts-worker.js');
             this.workers.push(worker);
         }
@@ -218,7 +217,6 @@ class MonteCarloTreeSearch {
             iterations += result[1];
         });
 
-        console.log(allActions)
         let bestAction = null;
         let bestScore = -Infinity;
 
