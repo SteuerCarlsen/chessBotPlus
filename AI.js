@@ -66,12 +66,13 @@ class AIPrototype {
 
 //TreeNode Prototype holds info and methods for the nodes in the Monte Carlo Tree Search
 class TreeNode {
-    constructor(state, depth = 0) {
+    constructor(state) {
         this.state = state;         // Current game position
         this.parent = null;         // Previous position
         this.children = [];         // Next possible positions
         this.wins = 0;             // How many wins we got through this position
         this.visits = 0;           // How many times we tried this position
+        this.turns = 0;
         this.untriedActions = state.getPossibleActions();  // Moves we haven't tried yet
         this.explorationConstant = 1.41;
         this.depth = 0;
@@ -122,20 +123,21 @@ class TreeNode {
             const Terminal = currentState.advanceTurn();
 
             if(Terminal != undefined) {
-                if(Terminal[0]) return 1;
-                if(Terminal[1]) return 0;
+                if(Terminal[0]) return [1, depth];
+                if(Terminal[1]) return [0, depth];
             }
 
             depth++;
         }
-        return 0;
+        return [0, depth];
     }
     //Backpropagates the result of the simulation to node and parent nodes
     backpropagate(result) {
         let node = this;
         while(node !== null) {
             node.visits++;
-            node.wins += result;
+            node.wins += result[0];
+            node.turns += result[1];
             node = node.parent;
         }
     }
@@ -193,7 +195,9 @@ class MonteCarloTreeSearch {
                         startIndex: startIndex,
                         endIndex: endIndex,
                         timeLimit: this.timeLimit,
-                        maxDepth: this.maxDepth
+                        maxDepth: this.maxDepth,
+                        minNodeRepeats: 1,
+                        maxNodeRepeats: 10,
                     });
                     worker.onmessage = (e) => resolve(e.data);
                 })
@@ -219,15 +223,21 @@ class MonteCarloTreeSearch {
 
         let bestAction = null;
         let bestScore = -Infinity;
+        let bestActionAverageTurns = 0;
 
-        for (const [action, score] of Object.entries(allActions)) {
+        console.log(results)
+        console.log(allActions)
+
+        for (const [action, score, visits, turns] of Object.entries(allActions)) {
             if(score > bestScore) {
                 bestAction = action;
                 bestScore = score;
+                bestActionAverageTurns = turns / visits;
             }
         }
+
         console.log(iterations)
-        console.log(bestAction, bestScore)
+        console.log(bestAction, bestScore, bestActionAverageTurns)
         return bestAction;
     }
 }

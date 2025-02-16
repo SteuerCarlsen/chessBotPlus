@@ -11,11 +11,11 @@ self.onmessage = function(e) {
         const result = runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats);
         self.postMessage(result);
     } catch (error) {
-        self.postMessage({ error: error.message });
+        self.postMessage({ error: error.message});
     }
 }
 
-function runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats) {
+function runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats = 1, maxNodeRepeats = 1) {
     let results = [];
     let iterations = 0;
     const timePerMove = timeLimit / (endIndex - startIndex);
@@ -45,15 +45,20 @@ function runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLi
     
             let repeats = Math.max(minNodeRepeats, maxNodeRepeats - node.depth);
             let result = 0;
+            let turns = 0;
 
             for (let i = 0; i < repeats; i++) {
-                result += node.simulate(maxDepth);
+                let resultArray = node.simulate(maxDepth);
+                result += resultArray[0];
+                turns += resultArray[1];
             }
 
-            node.backpropagate(Math.round(result / repeats));
+            let averagedResult = Math.round(result / repeats);
+            let averagedTurns = Math.round(turns / repeats);
+
+            node.backpropagate([averagedResult, averagedTurns]);
         }
-        
-        results.push([action, root.wins])
+        results.push([action, root.wins, root.visits, root.turns]);
     }
 
     return [results, iterations];

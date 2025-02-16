@@ -388,7 +388,7 @@ class GameState {
 
     //Method to check if the game state is terminal (win or loss)
     isTerminal() {
-        return [this.checkWinCondition('enemy'), this.checkWinCondition('player')];
+        return [this.checkWinCondition('enemy'), this.checkWinCondition('player'),this.turn];
     }
 
     //Method to clone the current game state for use in new nodes to simulate without affecting other nodes
@@ -485,8 +485,8 @@ class RealGameState extends GameState {
         this.selectedPiece = null;
         this.targetedPiece = null;
         this.started = false;
+        this.turn = 1;
         this.currentPlayer = this.randomizeTurn();
-        this.turn = 0;
     }
 
     init(enemyEncounter) {
@@ -494,7 +494,6 @@ class RealGameState extends GameState {
         this.enemyTimeLeft = enemyEncounter.enemyTotalTimeLimit;
         this.enemyAI = new AIPrototype(enemyEncounter.AI);*/
         this.enemyAI = new AIPrototype('monteCarlo');
-        this.turn = 1;
     }
 
     //Randomized who's turn it is at the start of the game
