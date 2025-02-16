@@ -486,7 +486,7 @@ class RealGameState extends GameState {
         this.targetedPiece = null;
         this.started = false;
         this.currentPlayer = this.randomizeTurn();
-        this.init();
+        this.turn = 0;
     }
 
     init(enemyEncounter) {
@@ -494,6 +494,7 @@ class RealGameState extends GameState {
         this.enemyTimeLeft = enemyEncounter.enemyTotalTimeLimit;
         this.enemyAI = new AIPrototype(enemyEncounter.AI);*/
         this.enemyAI = new AIPrototype('monteCarlo');
+        this.turn = 1;
     }
 
     //Randomized who's turn it is at the start of the game
@@ -548,6 +549,7 @@ class RealGameState extends GameState {
     }
 
     turnEnd() {
+        this.turn++;
         this.selectedPiece = null;
         this.targetedPiece = null;
         requestAnimationFrame(() => {
