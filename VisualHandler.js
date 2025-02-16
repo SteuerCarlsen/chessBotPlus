@@ -60,31 +60,34 @@ const VisualBoard = {
         this.contents['Square' + index].addClass('Square');
 
         if(value == undefined){
-            this.contents['Square' + index].addClass('EmptySquare');
+            this.contents['Square' + index].updateValue('');
             return
         }
 
         if (value instanceof PlayerPiece) {
             this.contents['Square' + index].addClass('PlayerPiece');
+            this.contents['Square' + index].updateValue("😎");
             return;
         }
 
         if (value instanceof EnemyPiece) {
             this.contents['Square' + index].addClass('EnemyPiece');
+            this.contents['Square' + index].updateValue("💀");
             return;
         }
 
         if (value instanceof Terrain) {
             this.contents['Square' + index].addClass('Terrain');
+            this.contents['Square' + index].updateValue("🌲🌲<br>🌲🌲");
             return;
         }
 
         switch (value) {
             case 'RG':
                 this.contents['Square' + index].addClass('Range');
+                this.contents['Square' + index].updateValue("🦶");
                 break;
             case 'PA':
-                this.contents['Square' + index].addClass('PlayerArea');
                 break;
         }
         return;

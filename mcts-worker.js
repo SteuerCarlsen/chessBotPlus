@@ -1,5 +1,4 @@
 importScripts(
-    './Utilities.js',
     './Stats.js',
     './Abilities.js',
     './AI.js',
@@ -7,12 +6,16 @@ importScripts(
 )
 
 self.onmessage = function(e) {
-    const {initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth} = e.data;
-    const result = runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth);
-    self.postMessage(result);
+    try {
+        const {initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats} = e.data;
+        const result = runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats);
+        self.postMessage(result);
+    } catch (error) {
+        self.postMessage({ error: error.message });
+    }
 }
 
-function runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth) {
+function runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats) {
     let results = [];
     let iterations = 0;
     const timePerMove = timeLimit / (endIndex - startIndex);
@@ -40,9 +43,14 @@ function runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLi
                 if(node === null) continue;
             }
     
-            const result = node.simulate(maxDepth);
-    
-            node.backpropagate(result);
+            let repeats = Math.max(minNodeRepeats, maxNodeRepeats - node.depth);
+            let result = 0;
+
+            for (let i = 0; i < repeats; i++) {
+                result += node.simulate(maxDepth);
+            }
+
+            node.backpropagate(Math.round(result / repeats));
         }
         
         results.push([action, root.wins])

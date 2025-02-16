@@ -66,3 +66,5 @@ const TestBoard = [,,,,,,,
     }],,,,['terrain'],['terrain']];
 Board.init(TestBoard);
 const CurrentCombat = new RealGameState(Board);
+
+const MCTSAI = new MonteCarloTreeSearch();

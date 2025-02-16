@@ -1,37 +1,31 @@
 .PlayerPiece {
     height: 83px;
     width: 83px;
-    background-color: green;
 }
 
 .EnemyPiece {
     height: 83px;
     width: 83px;
-    background-color: red;
+    background-color: red !important;
 }
 
 .Terrain {
     height: 83px;
     width: 83px;
-    background-color: black;
+    background-color: rgba(74, 50, 20, 0.909) !important;
+    line-height: 41px !important;
 }
 
 .Range {
     height: 83px;
     width: 83px;
-    background-color: lightgreen;
+    background-color: lightgreen !important;
 }
 
 .PlayerArea {
     height: 83px;
     width: 83px;
-    background-color: lightblue;
-}
-
-.EmptySquare {
-    height: 83px;
-    width: 83px;
-    background-color: white;
+    background-color: lightblue !important;
 }
 
 .PiecesContainer {
@@ -95,6 +89,10 @@
     margin-right: -4px;
     margin-bottom: -4px;
     overflow: hidden;
+    background-color: green;
+    text-align: center;
+    font-size: xx-large;
+    line-height: 83px;
 }
 
 .Page {

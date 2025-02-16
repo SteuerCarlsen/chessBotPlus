@@ -13,3 +13,39 @@ function trimArray(arr) {
         return acc;
     }, []);
 }
+
+const combatLog = {
+    log: [],
+    shownLog: [],
+    maxEntries: 100,
+
+    addEntry(type, payLoad = {}) {
+        this.log.unshift({
+            type,
+            payLoad,
+            timeStamp: Date.now(),
+        })
+
+        if(type == "move"){
+            this.moveEntry(payLoad);
+        }
+        
+        if (this.log.length > this.maxEntries) {
+            this.removeOldestEntry();
+        }
+    },
+
+    moveEntry(payLoad) {
+        this.shownLog.unshift(`${payLoad.piece} moved to ${payLoad.index}`);
+    },
+
+    removeOldestEntry() {
+        this.log.pop();
+        this.shownLog.pop();
+    },
+
+    clearLog() {
+        this.log = [];
+    },
+
+}

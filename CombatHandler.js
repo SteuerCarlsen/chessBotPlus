@@ -388,10 +388,9 @@ class Piece extends Entity {
     }
 
     move(newIndex, board = Board, updateVisual = true){
-        //console.log(`Moving ${this.name} to index ${newIndex}`);
-        //console.log(board)
         board.switchPieces(this.temp.index, newIndex, updateVisual);
         this.temp.index = newIndex;
+        if(updateVisual) {combatLog.addEntry('move', {piece: this.name, index: newIndex})}
     }
 
     getMovementRange(board = Board) {

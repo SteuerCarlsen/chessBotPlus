@@ -54,14 +54,11 @@ class AIPrototype {
         return moveArray;
     }
     //Choose action based on Monte Carlo Tree Search (action most likely to result in win)
-    monteCarloMove(timeLimit = 500, maxDepth = 100) {
-        for (const action of this.possibleActions) {
-            if (this.gameState.checkWinCondition('enemy')) return action;
-        }
-
-        const mcts = new MonteCarloTreeSearch(Board.exportBoard(), 'enemy', timeLimit, maxDepth);
-        const bestAction = mcts.runSearch();
-
+    async monteCarloMove(timeLimit = 500, maxDepth = 100) {
+        console.log('MCTS started')
+        MCTSAI.init(Board.exportBoard(), 'enemy', timeLimit, maxDepth)
+        const bestAction = await MCTSAI.runSearch();
+        console.log(bestAction)
         if(!bestAction) return false;
         return bestAction;
     }
@@ -69,7 +66,7 @@ class AIPrototype {
 
 //TreeNode Prototype holds info and methods for the nodes in the Monte Carlo Tree Search
 class TreeNode {
-    constructor(state) {
+    constructor(state, depth = 0) {
         this.state = state;         // Current game position
         this.parent = null;         // Previous position
         this.children = [];         // Next possible positions
@@ -77,6 +74,7 @@ class TreeNode {
         this.visits = 0;           // How many times we tried this position
         this.untriedActions = state.getPossibleActions();  // Moves we haven't tried yet
         this.explorationConstant = 1.41;
+        this.depth = 0;
     }
     //Selects child node based on UCT (Upper Confidence Bound for Trees) formula
     selectChild() {
@@ -100,7 +98,7 @@ class TreeNode {
         const nextState = this.state.clone();
         nextState.play(action);
 
-        const child = new TreeNode(nextState);
+        const child = new TreeNode(nextState, this.depth + 1);
         child.parent = this;
         this.children.push(child);
 
@@ -154,46 +152,61 @@ class TreeNode {
 
 //MonteCarloTreeSearch Prototype holds info and methods for the Monte Carlo Tree Search
 class MonteCarloTreeSearch {
-    constructor(initialBoard, initialPlayer, timeLimit = 500, maxDepth = 100) {
+    constructor() {
+        this.workers = [];
+        this.numWorkers = 4;
+        this.initWorkers();
+    }
+
+    cleanupWorkers() {
+        this.workers.forEach(worker => worker.terminate());
+        this.workers = [];
+    }
+
+    initWorkers() {
+        for (let i = 0; i < this.numWorkers; i++) {
+            console.log('Worker created')
+            const worker = new Worker('mcts-worker.js');
+            this.workers.push(worker);
+        }
+    }
+
+    init(initialBoard, initialPlayer, timeLimit = 500, maxDepth = 100) {
         this.initialBoard = initialBoard;
         this.initialPlayer = initialPlayer;
         this.initialSate = new SimulationState(initialBoard, initialPlayer);
         this.initialPossibleActions = this.initialSate.getPossibleActions();
         this.timeLimit = timeLimit;
         this.maxDepth = maxDepth;
-        this.workers = [];
-        this.numWorkers = Math.min(navigator.hardwareConcurrency, 4);
         this.actionsPerWorker = Math.ceil(this.initialPossibleActions.length / this.numWorkers);
-        this.initWorkers();
     }
 
-    initWorkers() {
-        for (let i = 0; i < this.numWorkers; i++) {
-            const worker = new Worker('mcts-worker.js');
-            this.workers.push(worker);
-        }
-    }
     //Runs the Monte Carlo Tree Search within the given parameters
     async runSearch() {
-        const promises = this.workers.map((worker, index) => {
-            const startIndex = index * this.actionsPerWorker;
-            const endIndex = Math.min(startIndex + this.actionsPerWorker, this.initialPossibleActions.length);
-            return new Promise(resolve => {
-                worker.postMessage({
-                    initialBoard: this.initialBoard,
-                    initialPlayer: this.initialPlayer,
-                    startIndex: startIndex,
-                    endIndex: endIndex,
-                    timeLimit: this.timeLimit,
-                    maxDepth: this.maxDepth
-                });
-                worker.onmessage = (e) => resolve(e.data);
-            })
-        });
+        try {
+            const promises = this.workers.map((worker, index) => {
+                const startIndex = index * this.actionsPerWorker;
+                const endIndex = Math.min(startIndex + this.actionsPerWorker, this.initialPossibleActions.length);
+                return new Promise(resolve => {
+                    worker.postMessage({
+                        initialBoard: this.initialBoard,
+                        initialPlayer: this.initialPlayer,
+                        startIndex: startIndex,
+                        endIndex: endIndex,
+                        timeLimit: this.timeLimit,
+                        maxDepth: this.maxDepth
+                    });
+                    worker.onmessage = (e) => resolve(e.data);
+                })
+            });
 
-        const results = await Promise.all(promises);
+            const results = await Promise.all(promises);
 
-        return this.getBestAction(results);
+            return this.getBestAction(results);
+        } catch (error) {
+            console.error('MCTS Errror:', error);
+            return false;
+        }
     }
 
     //Returns the action with most wins in the simulation
