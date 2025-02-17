@@ -1,6 +1,7 @@
 // Overall Ability Class used to gather all components
 class Ability {
-    constructor(components, range) {
+    constructor(name, components, range) {
+        this.name = name;
         this.range = range;
         for (const key in components) {
             this.addComponent(key, components[key]);
@@ -24,18 +25,23 @@ class Ability {
         return board.calculateRange(index, this.range, true, true);
     }
     // Use the ability - Should be overwritten by child classes
-    static use() {}
+    use(actor, target) {
+        CombatLog.addEntry('ability', {value: this.apply(), piece: actor.name, ability: this.name, target: target.name});
+    }
+
+    static apply() {}
 }
 
 // Ability Classes for abilities with same method needs (like a physical attack, a buff, etc.)
 class PhysicalAbility extends Ability {
-    constructor(components, range) {
-        super(components, range);
+    constructor(name, components, range) {
+        super(name, components, range);
     }
     // Use the ability given actor and target
-    use(actor, target) {
+    apply(actor, target) {
         if (this.hasComponent('PhysicalHitGuaranteedComp') || Math.random() <= this.physicalHitComp.hitChance) {
-            console.log('Hit for ' + this.physicalDamageComp.damage);
+            target.resourceStats.health.reduce(this.physicalDamageComp.damage);
+            return this.physicalDamageComp.damage
         }
     }
 }
@@ -67,7 +73,7 @@ const abilityComponentMap = {
 
 
 // Abilities
-const WeaponHit = new PhysicalAbility({
+const WeaponAttack = new PhysicalAbility("Weapon Attack", {
     PhysicalDamageComp: 10,
     PhysicalHitComp: 0.5,
     PhysicalHitGuaranteedComp
@@ -76,6 +82,6 @@ const WeaponHit = new PhysicalAbility({
 // Map of abilities for dynamically creating new abilities when creating item/abilities/etc.
 const AbilityMap = new Map(
     [
-        ['WeaponHit', WeaponHit],
+        ['WeaponAttack', WeaponAttack],
     ],
 );

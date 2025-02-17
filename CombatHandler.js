@@ -74,47 +74,64 @@ class BoardPrototype {
     }
 
     calculateRange(index, range, checkLos = false, acceptTargets = false) {
-        this.rangeMap = new Array();
-        this.calculatedSquares = new Array(64).fill(0);
+        this.rangeMap = new Array(64);
+        let rangeMapIndex = 0;
+        this.calculatedSquares = new Uint8Array(64);
 
-        let queue = [{index: index, range: range +1}];
+        const queueIndices = new Uint8Array(64);
+        const queueRanges = new Uint8Array(64);
+        let queueStart = 0;
+        let queueEnd = 1;
+
+        queueIndices[0] = index;
+        queueRanges[0] = range + 1;
         this.calculatedSquares[index] = range + 1;
 
         if(acceptTargets) {
-            this.rangeMap.push(index);
+            this.rangeMap[rangeMapIndex++] = index;
         }
 
-        while(queue.length > 0){
-            const current = queue.shift();
+        const {simpleLOSBoard, simpleMoveBoard, boardArray} = this;
+        const isPiece = acceptTargets ? 
+        (idx) => boardArray[idx] instanceof PlayerPiece || boardArray[idx] instanceof EnemyPiece 
+        : () => false;
+
+        while(queueStart < queueEnd) {
+            const currentIndex = queueIndices[queueStart];
+            const currentRange = queueRanges[queueStart++];
             
             if(current.range < 1) continue;
 
-            NeighborMap[current.index].forEach((neighbor) => {
-                const newRange = current.range - 1;
+            const neighbors = NeighborMap[currentIndex];
+            const neighborCount = neighbors.length;
 
+            for(let i = 0; i < neighborCount; i++) {
+                const neighbor = neighbors[i];
+                const newRange = currentRange - 1;
+    
                 if(newRange > this.calculatedSquares[neighbor]) {
-                    if(checkLos && this.calculateLos(index, neighbor)) {
-                        if(!this.simpleLOSBoard[neighbor]) {
-                            this.rangeMap.push(neighbor);
-                            this.calculatedSquares[neighbor] = newRange;
-                            queue.push({index: neighbor, range: newRange});
-                        } else {
-                            if(acceptTargets && (this.boardArray[neighbor] instanceof PlayerPiece || this.boardArray[neighbor] instanceof EnemyPiece)) {
-                                this.rangeMap.push(neighbor);
+                    if(checkLos) {
+                        if(this.calculateLos(index, neighbor)) {
+                            if(!simpleLOSBoard[neighbor]) {
+                                this.rangeMap[rangeMapIndex++] = neighbor;
+                                this.calculatedSquares[neighbor] = newRange;
+                                queueIndices[queueEnd] = neighbor;
+                                queueRanges[queueEnd++] = newRange;
+                            } else if(acceptTargets && isPiece(neighbor)) {
+                                this.rangeMap[rangeMapIndex++] = neighbor;
                             }
                         }
-                    } else {
-                        if(!this.simpleMoveBoard[neighbor]){
-                            this.rangeMap.push(neighbor);
-                            this.calculatedSquares[neighbor] = newRange;
-                            queue.push({index: neighbor, range: newRange});
-                        }
+                    } else if(!simpleMoveBoard[neighbor]) {
+                        this.rangeMap[rangeMapIndex++] = neighbor;
+                        this.calculatedSquares[neighbor] = newRange;
+                        queueIndices[queueEnd] = neighbor;
+                        queueRanges[queueEnd++] = newRange;
                     }
                 }
-            });
+            }
         }
-
-        return this.rangeMap;
+    
+        return this.rangeMap.slice(0, rangeMapIndex);
     }
 
     calculateMoveDistanceWrapper(index, targetIndex, maxDistance = 14){
@@ -265,7 +282,7 @@ class Piece extends Entity {
             armor: new FlatStat('Armor'),
         };
         //Beware that this is manually set for now
-        this.ressourceStats = {
+        this.resourceStats = {
             health: new HealthStat(100)
         };
         this.primaryStats = {
@@ -412,7 +429,7 @@ class GameState {
         let totalHealth = 0;
         if(actor == 'enemy'){
             for(const piece of this.board.playerPieces){
-                totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
+                totalHealth += Math.max(0, piece.resourceStats.health.getCurrentValue());
                 if(totalHealth > 0){
                     return false;
                 }
@@ -420,7 +437,7 @@ class GameState {
             return true;
         } else {
             for(const piece of this.board.enemyPieces){
-                totalHealth += Math.max(0, piece.ressourceStats.health.getCurrentValue());
+                totalHealth += Math.max(0, piece.resourceStats.health.getCurrentValue());
                 if(totalHealth > 0){
                     return false;
                 }
@@ -441,27 +458,34 @@ class SimulationState extends GameState {
 
     //Get array of possible actions for the current player
     getPossibleActions() {
-        let possibleActions = [];
-        let pieces = this.currentPlayer === 'player' ? this.board.playerPieces : this.board.enemyPieces;
-        pieces.forEach(piece => {
-            let moves = piece.getMovementRange(this.board);
-            moves.forEach(move => {
-                possibleActions.push(['movement', piece.temp.index, move]);
-            })
-            if(piece.abilities != undefined && piece.abilities.length > 0){
-                piece.abilities.forEach((ability, abilityKey) => {
-                    let range = ability.getRange(piece.temp.index, this.board);
-                    range.forEach(targetIndex => {
-                        if (this.currentPlayer === 'player' && this.board.boardArray[targetIndex] instanceof EnemyPiece) {
-                            possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
-                        } else if (this.currentPlayer === 'enemy' && this.board.boardArray[targetIndex] instanceof PlayerPiece) {
-                            possibleActions.push(['ability', piece.temp.index, targetIndex, abilityKey]);
-                        } 
-                    })
-                })
+        let possibleActions = new Array(64);
+        let actionCount = 0;
+
+        const pieces = this.currentPlayer === 'player' ? this.board.playerPieces : this.board.enemyPieces;
+        const isPlayerTurn = this.currentPlayer === 'player';
+        const boardArray = this.boardArray;
+
+        for (const piece of pieces) {
+            const pieceIndex = piece.temp.index;
+            const moves = piece.getMovementRange(this.board);
+
+            for (const move of moves) {
+                possibleActions[actionCount++] = ['movement', piece.temp.index, move];
             }
-        })
-        return possibleActions;
+
+            const abilities = piece.abilities;
+            if (!abilities?.length) continue;
+            
+            for (let i = 0; i < abilities.length; i++) {
+                const range = abilities[i].getRange(pieceIndex, this.board);
+                for (const targetIndex of range) {
+                    if (boardArray[targetIndex] instanceof Piece) {
+                        possibleActions[actionCount++] = ['ability', pieceIndex, targetIndex, i];
+                    }
+                }
+            }
+        }
+        return possibleActions.slice(0, actionCount);
     }
 
     //Method to play the given action in the simulation
@@ -497,6 +521,7 @@ class RealGameState extends GameState {
         this.currentPlayer = this.randomizeTurn();
     }
 
+    //Currently hardcoded
     init(enemyEncounter) {
         /*this.playerTimeLeft = enemyEncounter.playerTotalTimeLimit;
         this.enemyTimeLeft = enemyEncounter.enemyTotalTimeLimit;

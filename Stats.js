@@ -111,7 +111,7 @@ class Stamina extends PrimaryStat {
     }
 
     static calculateStats(target) {
-        target.ressourceStats.health.permanent = target.primaryStats.stamina.getTotal() * Factor.Stamina.health;
+        target.resourceStats.health.permanent = target.primaryStats.stamina.getTotal() * Factor.Stamina.health;
     }
 }
 
@@ -127,7 +127,7 @@ class Wisdom extends PrimaryStat {
     }
 
     static calculateStats(target) {
-        target.ressourceStats.mana.permanent = target.primaryStats.wisdom.getTotal() * Factor.Wisdom.mana;
+        target.resourceStats.mana.permanent = target.primaryStats.wisdom.getTotal() * Factor.Wisdom.mana;
     }
 }
 
@@ -256,7 +256,7 @@ class HealthStat extends ResourceStat {
     }
 
     calculateStats(target) {
-        target.ressourceStats.health.permanent = target.primaryStats.stamina.getTotal() * Factor.Stamina.health;
+        target.resourceStats.health.permanent = target.primaryStats.stamina.getTotal() * Factor.Stamina.health;
     }
 }
 

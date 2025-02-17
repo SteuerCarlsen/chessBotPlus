@@ -45,7 +45,7 @@ const TestBoard = [,,,,,,,
     wisdom: 10,
     dexterity: 10,
     initiative: 10,
-    },['WeaponHit']],,['terrain'],,,,,['terrain'],,,,,,,['terrain'],,,,,['terrain'],['terrain'],['terrain'],,,['terrain'],,,,,['terrain'],,,,,,['terrain'],['terrain'],,['terrain'],,
+    },['WeaponAttack']],,['terrain'],,,,,['terrain'],,,,,,,['terrain'],,,,,['terrain'],['terrain'],['terrain'],,,['terrain'],,,,,['terrain'],,,,,,['terrain'],['terrain'],,['terrain'],,
     ["enemyPiece","Enemy Character 2","None",{
         strength: 10,
         agility: 10,
@@ -54,7 +54,7 @@ const TestBoard = [,,,,,,,
         wisdom: 10,
         dexterity: 10,
         initiative: 10,
-    },['WeaponHit']],,,['terrain'],,['terrain'],,,,,,
+    },['WeaponAttack']],,,['terrain'],,['terrain'],,,,,,
     ["enemyPiece","Enemy Character","None",{
         strength: 10,
         agility: 10,
@@ -63,7 +63,7 @@ const TestBoard = [,,,,,,,
         wisdom: 10,
         dexterity: 10,
         initiative: 10,
-    },['WeaponHit']],,,,['terrain'],['terrain']];
+    },['WeaponAttack']],,,,['terrain'],['terrain']];
 Board.init(TestBoard);
 const CurrentCombat = new RealGameState(Board);
 CurrentCombat.init();

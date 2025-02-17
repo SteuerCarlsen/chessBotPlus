@@ -156,7 +156,7 @@ class TreeNode {
 class MonteCarloTreeSearch {
     constructor() {
         this.workers = [];
-        this.numWorkers = Math.min(navigator.hardwareConcurrency, 4);
+        this.numWorkers = 4;
         this.initWorkers();
     }
 
