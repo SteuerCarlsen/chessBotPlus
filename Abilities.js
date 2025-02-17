@@ -21,7 +21,7 @@ class Ability {
     }
     // Get the range of the ability
     getRange(index, board = Board) {
-        return board.getRangeMap(index, this.range, true);
+        return board.calculateRange(index, this.range, true, true);
     }
     // Use the ability - Should be overwritten by child classes
     static use() {}
@@ -64,9 +64,18 @@ const abilityComponentMap = {
     PhysicalHitGuaranteedComp: PhysicalHitGuaranteedComp,
 };
 
+
+
 // Abilities
-const weaponHit = new PhysicalAbility({
+const WeaponHit = new PhysicalAbility({
     PhysicalDamageComp: 10,
     PhysicalHitComp: 0.5,
     PhysicalHitGuaranteedComp
 }, 1);
+
+// Map of abilities for dynamically creating new abilities when creating item/abilities/etc.
+const AbilityMap = new Map(
+    [
+        ['WeaponHit', WeaponHit],
+    ],
+);

@@ -11,7 +11,15 @@ self.onmessage = function(e) {
         const result = runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats);
         self.postMessage(result);
     } catch (error) {
-        self.postMessage({ error: error.message});
+        self.postMessage({
+            error: {
+                message: error.message,
+                stack: error.stack,
+                name: error.name,
+                lineNumber: error.lineNumber,
+                fileName: error.fileName,
+            }
+        });
     }
 }
 

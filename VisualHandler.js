@@ -107,6 +107,20 @@ const VisualInventory = {
 
 VisualInventory.initiate();
 
+const VisualCombatLog = {
+    parent: new VisualElement('combatLog'),
+
+    update(log) {
+        let shownContent = '';
+        log.forEach((entry) => {
+            shownContent += `<p>${entry}</p>`;
+        });
+        this.parent.updateValue(shownContent);
+    }
+};
+
+
+
 // VisualSelectedPlayer holds shown information about the selected player character
 const VisualSelectedPlayer = {
     name: new VisualElement('selectedPlayerName'),

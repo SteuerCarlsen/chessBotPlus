@@ -73,42 +73,48 @@ class BoardPrototype {
         return false;
     }
 
-    calculateRangeWrapper(index, range, checkLos = false) {
-        //console.log(`Calculating ${index} for range ${range}`)
-        //console.log(index)
+    calculateRange(index, range, checkLos = false, acceptTargets = false) {
         this.rangeMap = new Array();
         this.calculatedSquares = new Array(64).fill(0);
-        this.calculateRange(index, index, ++range, ++range, checkLos);
-        //console.log(this.rangeMap)
-        return this.rangeMap;
-    }
 
-    calculateRange(index, orgIndex, range, orgRange, checkLos = false) {
-        //console.log(index)
-        if (range < 1) {
-            //console.log(`range is less than 1`)
-            return;
+        let queue = [{index: index, range: range +1}];
+        this.calculatedSquares[index] = range + 1;
+
+        if(acceptTargets) {
+            this.rangeMap.push(index);
         }
-        this.calculatedSquares[index] = range;
-        if (checkLos) {
-            NeighborMap[index].forEach((neighbor) => {
-                const newRange = range - 1;
-                if (!this.simpleLOSBoard[neighbor] && newRange > this.calculatedSquares[neighbor] && this.calculateLos(orgIndex, neighbor)) {
-                    //console.log(neighbor)
-                    this.rangeMap.push(neighbor)
-                    this.calculateRange(neighbor, orgIndex, newRange, orgRange, true);
+
+        while(queue.length > 0){
+            const current = queue.shift();
+            
+            if(current.range < 1) continue;
+
+            NeighborMap[current.index].forEach((neighbor) => {
+                const newRange = current.range - 1;
+
+                if(newRange > this.calculatedSquares[neighbor]) {
+                    if(checkLos && this.calculateLos(index, neighbor)) {
+                        if(!this.simpleLOSBoard[neighbor]) {
+                            this.rangeMap.push(neighbor);
+                            this.calculatedSquares[neighbor] = newRange;
+                            queue.push({index: neighbor, range: newRange});
+                        } else {
+                            if(acceptTargets && (this.boardArray[neighbor] instanceof PlayerPiece || this.boardArray[neighbor] instanceof EnemyPiece)) {
+                                this.rangeMap.push(neighbor);
+                            }
+                        }
+                    } else {
+                        if(!this.simpleMoveBoard[neighbor]){
+                            this.rangeMap.push(neighbor);
+                            this.calculatedSquares[neighbor] = newRange;
+                            queue.push({index: neighbor, range: newRange});
+                        }
+                    }
                 }
             });
-        } else {
-            NeighborMap[index].forEach((neighbor) => {
-                const newRange = range - 1;
-                if (!this.simpleMoveBoard[neighbor] && newRange > this.calculatedSquares[neighbor]) {
-                    //console.log(neighbor + ` is free`)
-                    this.rangeMap.push(neighbor)
-                    this.calculateRange(neighbor, orgIndex, newRange, orgRange);
-                }
-            });
         }
+
+        return this.rangeMap;
     }
 
     calculateMoveDistanceWrapper(index, targetIndex, maxDistance = 14){
@@ -138,13 +144,8 @@ class BoardPrototype {
         })
     }
 
-    getRangeMap(index, maxRange = 14, checkLos = false) {
-        //console.log(index)
-        return this.calculateRangeWrapper(index, maxRange, checkLos)
-    }
-
     showRange(index, range, checkLos = false) {
-        this.calculateRangeWrapper(index, range, checkLos).forEach((value) => {
+        this.calculateRange(index, range, checkLos).forEach((value) => {
             if (value !== false) {
                 this.updateSquare(value, 'RG');
             }
@@ -188,10 +189,10 @@ class BoardPrototype {
                     exportResult[key] = ['terrain'];
                 } else if (value instanceof PlayerPiece){
                     const pieceData = value.exportPiece();
-                    exportResult[key] = ['playerPiece', pieceData[0], pieceData[1], pieceData[2]];
+                    exportResult[key] = ['playerPiece', pieceData[0], pieceData[1], pieceData[2], pieceData[3]];
                 } else if (value instanceof EnemyPiece){
                     const pieceData = value.exportPiece();
-                    exportResult[key] = ['enemyPiece', pieceData[0], pieceData[1], pieceData[2]];
+                    exportResult[key] = ['enemyPiece', pieceData[0], pieceData[1], pieceData[2], pieceData[3]];
                 }
             }
         })
@@ -206,10 +207,10 @@ class BoardPrototype {
             return new Terrain()
         }
         if (value[0] == "playerPiece"){
-            return new PlayerPiece(value[1], value[2], value[3])
+            return new PlayerPiece(value[1], value[2], value[3], value[4])
         }
         if (value[0] == "enemyPiece"){
-            return new EnemyPiece(value[1], value[2], value[3])
+            return new EnemyPiece(value[1], value[2], value[3], value[4])
         }
     }
 }
@@ -242,10 +243,11 @@ class Terrain extends Entity {
 
 // Pieces are any player/enemy character that has stats
 class Piece extends Entity {
-    constructor(name, title, primaryStats, abilities, passives) {
+    constructor(name, title, primaryStats, abilityKeys, passives) {
         super(name, true, true);
         this.title = title;
-        this.abilities = abilities;
+        this.abilityKeys = abilityKeys;
+        this.abilities = [];
         this.passives = passives;
         this.status = {
             isWeaponEquipped: false,
@@ -275,7 +277,14 @@ class Piece extends Entity {
             dexterity: new Dexterity(primaryStats.dexterity, this),
             initiative: new Initiative(primaryStats.initiative, this),
         };
+        this.getAbilities(abilityKeys);
     }
+
+    getAbilities(keys) {
+        keys.forEach((key) => {
+            this.abilities.push(AbilityMap.get(key));
+        })
+    };
 
     exportPiece() {
         return [this.name, this.title, 
@@ -288,7 +297,7 @@ class Piece extends Entity {
                 dexterity: this.primaryStats.dexterity.permanent,
                 initiative: this.primaryStats.initiative.permanent,
                 },
-                this.abilities,
+                this.abilityKeys,
             ]
     }
 
@@ -314,8 +323,7 @@ class Piece extends Entity {
 
     getMovementRange(board = Board) {
         //console.log(this.name + ": " + this.temp.index)
-        //console.log(Board.getRangeMap(this.temp.index, this.movementPoints))
-        return board.getRangeMap(this.temp.index, this.movementPoints)
+        return board.calculateRange(this.temp.index, this.movementPoints)
     }
 }
 

@@ -127,7 +127,7 @@
 
 .PiecePortrait {
     display: inline-block;
-    height: 335px;
+    height: 155px;
     width: 460px;
     border: 1px solid black;
     margin-left: -1px;
@@ -218,4 +218,20 @@
     border: 1px solid black;
     left: 817px;
     top: 0px;
+}
+
+#combatLog {
+    height: 360px;
+    display: inline-block;
+    width: 460px;
+    border: 1px solid black;
+    margin-left: -1px;
+    margin-top: -1px;
+    margin-right: -4px;
+    margin-bottom: -4px;
+    text-indent: 10px;
+    text-align: left;
+    font-size: medium;
+    overflow-y: scroll;  /* Allows vertical scrolling */
+    overflow-x: hidden;  /* Hides horizontal scrolling */
 }

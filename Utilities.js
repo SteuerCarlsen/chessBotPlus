@@ -29,14 +29,24 @@ const combatLog = {
         if(type == "move"){
             this.moveEntry(payLoad);
         }
+
+        if(type == "ability"){
+            this.abilityEntry(payLoad);
+        }
         
         if (this.log.length > this.maxEntries) {
             this.removeOldestEntry();
         }
+
+        this.updateShownLog();
+    },
+
+    abilityEntry(payLoad) {
+        this.shownLog.unshift(`Turn ${CurrentCombat.turn}: ${payLoad.piece} used ${payLoad.ability} on ${payLoad.target} for ${payLoad.value}`);
     },
 
     moveEntry(payLoad) {
-        this.shownLog.unshift(`${payLoad.piece} moved to ${payLoad.index}`);
+        this.shownLog.unshift(`Turn ${CurrentCombat.turn}: ${payLoad.piece} moved to square ${payLoad.index}`);
     },
 
     removeOldestEntry() {
@@ -47,6 +57,10 @@ const combatLog = {
     clearLog() {
         this.log = [];
     },
+
+    updateShownLog() {
+        VisualCombatLog.update(this.shownLog);
+    }
 
 }
 
