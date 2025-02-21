@@ -216,12 +216,14 @@ class ResourceStat extends Stat {
         this.currentValue = this.getTotal();
     }
 
-    reduce(value) {
+    reduce(value, updateVisual = true) {
         this.currentValue -= value;
         if (this.currentValue <= 0) {
             this.zeroed();
         }
-        this.updateVisual();
+        /*if (updateVisual) {
+            this.updateVisual();
+        }*/
         return this.currentValue;
     }
 

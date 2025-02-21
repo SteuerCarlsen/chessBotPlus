@@ -9,18 +9,34 @@ self.onmessage = function(e) {
     try {
         const {initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats} = e.data;
         const result = runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats);
-        self.postMessage(result);
+        sendMessage(result);
     } catch (error) {
-        self.postMessage({
+        sendMessage({
             error: {
                 message: error.message,
                 stack: error.stack,
-                name: error.name,
-                lineNumber: error.lineNumber,
-                fileName: error.fileName,
+                name: error.name
             }
         });
     }
+}
+
+function sendMessage(data) {
+    if(data.debug) {
+        self.postMessage({type: 'debug', data: data.debug});
+    } else {
+        self.postMessage(data);
+    }
+}
+
+function debugLog(message, data) {
+    sendMessage({
+        debug: {
+            message,
+            data,
+            timestamp: Date.now()
+        }
+    });
 }
 
 function runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats = 1, maxNodeRepeats = 1) {
@@ -51,20 +67,11 @@ function runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLi
                 if(node === null) continue;
             }
     
-            let repeats = Math.max(minNodeRepeats, maxNodeRepeats - node.depth);
-            let result = 0;
-            let turns = 0;
+            let resultArray = node.simulate(maxDepth);
+            let result = resultArray[0];
+            let turns = resultArray[1];
 
-            for (let i = 0; i < repeats; i++) {
-                let resultArray = node.simulate(maxDepth);
-                result += resultArray[0];
-                turns += resultArray[1];
-            }
-
-            let averagedResult = Math.round(result / repeats);
-            let averagedTurns = Math.round(turns / repeats);
-
-            node.backpropagate([averagedResult, averagedTurns]);
+            node.backpropagate([result, turns]);
         }
         results.push([action, root.wins, root.visits, root.turns]);
     }

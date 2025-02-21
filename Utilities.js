@@ -106,9 +106,7 @@ function calculateLosLine(index, target, boardSize = 64) {
             y += sy;
         }
     }
-    // Include the target square
-    const targetSquare = endX + (endY * Math.sqrt(boardSize));
-    losPath.push(targetSquare);
+    
     return losPath;
 }
 

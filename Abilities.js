@@ -24,9 +24,20 @@ class Ability {
     getRange(index, board = Board) {
         return board.calculateRange(index, this.range, true, true);
     }
-    // Use the ability - Should be overwritten by child classes
-    use(actor, target) {
-        CombatLog.addEntry('ability', {value: this.apply(), piece: actor.name, ability: this.name, target: target.name});
+
+    use(actor, target, isReal = true) {
+        /*debugLog('Using ability', {
+            actor: actor.name,
+            target: target.name,
+            ability: this.name,
+            isReal
+        });*/
+        if(!isReal) {
+            this.apply(actor, target);
+        } else {
+            this.apply(actor, target, isReal);
+        }
+        //debugLog('Returning from use')
     }
 
     static apply() {}
@@ -38,11 +49,25 @@ class PhysicalAbility extends Ability {
         super(name, components, range);
     }
     // Use the ability given actor and target
-    apply(actor, target) {
-        if (this.hasComponent('PhysicalHitGuaranteedComp') || Math.random() <= this.physicalHitComp.hitChance) {
-            target.resourceStats.health.reduce(this.physicalDamageComp.damage);
-            return this.physicalDamageComp.damage
+    apply(actor, target, isReal = true) {
+        /*debugLog('Applying physical ability', {
+            actor: actor.name,
+            target: target.name,
+            damage: this.PhysicalDamageComp?.damage
+        });*/
+        if (this.hasComponent('PhysicalHitGuaranteedComp') || Math.random() <= this.PhysicalHitComp.hitChance) {
+            const damage = this.PhysicalDamageComp.damage;
+            const beforeHealth = target.resourceStats.health.getCurrentValue();
+            target.resourceStats.health.reduce(damage, isReal);
+            const afterHealth = target.resourceStats.health.getCurrentValue();
+
+            /*debugLog('Damage applied', {
+                damage,
+                beforeHealth,
+                afterHealth,
+            });*/
         }
+        //debugLog('Returning from apply')
     }
 }
 
@@ -69,8 +94,6 @@ const abilityComponentMap = {
     PhysicalHitComp: PhysicalHitComp,
     PhysicalHitGuaranteedComp: PhysicalHitGuaranteedComp,
 };
-
-
 
 // Abilities
 const WeaponAttack = new PhysicalAbility("Weapon Attack", {

@@ -54,9 +54,9 @@ class AIPrototype {
         return moveArray;
     }
     //Choose action based on Monte Carlo Tree Search (action most likely to result in win)
-    async monteCarloMove(timeLimit = 500, maxDepth = 100) {
+    async monteCarloMove() {
         console.log('MCTS started')
-        MCTSAI.init(Board.exportBoard(), 'enemy', timeLimit, maxDepth)
+        MCTSAI.init(Board.exportBoard(), 'enemy')
         const bestAction = await MCTSAI.runSearch();
         console.log(bestAction)
         if(!bestAction) return false;
@@ -73,7 +73,7 @@ class TreeNode {
         this.wins = 0;             // How many wins we got through this position
         this.visits = 0;           // How many times we tried this position
         this.turns = 0;
-        this.untriedActions = state.getPossibleActions();  // Moves we haven't tried yet
+        this.untriedActions = [...state.getPossibleActions()];  // Moves we haven't tried yet
         this.explorationConstant = 1.41;
         this.depth = 0;
     }
@@ -95,6 +95,7 @@ class TreeNode {
         if(this.untriedActions.length === 0) return null;
         const actionIndex = Math.floor(Math.random() * this.untriedActions.length);
         const action = this.untriedActions.splice(actionIndex, 1)[0];
+        this.untriedActions.splice(actionIndex, 1);
 
         const nextState = this.state.clone();
         nextState.play(action);
@@ -109,20 +110,25 @@ class TreeNode {
     simulate(maxDepth) {
         let currentState = this.state.clone();
         let depth = 0;
+
+        //debugLog('Starting simulation', { maxDepth });
+
         while(depth < maxDepth) {
             const possibleActions = currentState.getPossibleActions();
             if(possibleActions.length === 0) {
+                //debugLog('No possible actions', { depth });
                 return 0
             };
 
             currentState.advanceTurn();
 
             const randomAction = possibleActions[Math.floor(Math.random() * possibleActions.length)];
+            
             currentState.play(randomAction);
-
             const Terminal = currentState.advanceTurn();
 
             if(Terminal != undefined) {
+                //debugLog('Terminal state reached', Terminal);
                 if(Terminal[0]) return [1, depth];
                 if(Terminal[1]) return [0, depth];
             }
@@ -172,7 +178,7 @@ class MonteCarloTreeSearch {
         }
     }
 
-    init(initialBoard, initialPlayer, timeLimit = 500, maxDepth = 100) {
+    init(initialBoard, initialPlayer, timeLimit = 1000, maxDepth = 200) {
         this.initialBoard = initialBoard;
         this.initialPlayer = initialPlayer;
         this.initialSate = new SimulationState(initialBoard, initialPlayer);
@@ -199,11 +205,20 @@ class MonteCarloTreeSearch {
                         minNodeRepeats: 1,
                         maxNodeRepeats: 10,
                     });
-                    worker.onmessage = (e) => resolve(e.data);
+
+                    worker.onmessage = function(e) {
+                        if (e.data.type === 'debug') {
+                            console.log('MCTS Debug:', e.data.data.message, e.data.data.data);
+                        } else {
+                            resolve(e.data);
+                        }
+                    }
                 })
             });
 
             const results = await Promise.all(promises);
+
+            console.log('MCTS Results:', results);
 
             return this.getBestAction(results);
         } catch (error) {
@@ -231,12 +246,12 @@ class MonteCarloTreeSearch {
         for (const [action, score, visits, turns] of Object.entries(allActions)) {
             if(score > bestScore) {
                 bestAction = action;
-                bestScore = score;
+                bestScore = score / visits;
                 bestActionAverageTurns = turns / visits;
             }
         }
 
-        console.log(iterations)
+        console.log(`${iterations} iterations in ${this.timeLimit}ms`);
         console.log(bestAction, bestScore, bestActionAverageTurns)
         return bestAction;
     }
