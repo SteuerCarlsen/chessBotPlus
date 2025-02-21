@@ -6,18 +6,19 @@ class AIPrototype {
         this.possibleActions = null;
     }
     //Method to start the AI's turn with moves chosen based on AI-type
-    startTurn() {
+    async startTurn() {
         this.gameState = new SimulationState(Board, 'enemy');
         this.possibleActions = this.gameState.getPossibleActions();
         let action = null;
         if(this.type === 'monteCarlo') {
-            action = this.monteCarloMove();
+            action = await this.monteCarloMove();
         } else if (this.type === 'random') {
             action = this.randomMove();
         } else if (this.type === 'chase') {
             action = this.chaseMove();
         }
         if (action != false) {
+            console.log('AI chose:', action);
             const actingPiece = Board.boardArray[action[1]];
             if (action[0] === 'movement') {
                 actingPiece.move(action[2], Board)
@@ -55,10 +56,9 @@ class AIPrototype {
     }
     //Choose action based on Monte Carlo Tree Search (action most likely to result in win)
     async monteCarloMove() {
-        console.log('MCTS started')
         MCTSAI.init(Board.exportBoard(), 'enemy')
         const bestAction = await MCTSAI.runSearch();
-        console.log(bestAction)
+        console.log('Monte Carlo AI chose:', bestAction);
         if(!bestAction) return false;
         return bestAction;
     }
@@ -120,12 +120,9 @@ class TreeNode {
                 return 0
             };
 
-            currentState.advanceTurn();
-
             const randomAction = possibleActions[Math.floor(Math.random() * possibleActions.length)];
             
-            currentState.play(randomAction);
-            const Terminal = currentState.advanceTurn();
+            const Terminal = currentState.play(randomAction);
 
             if(Terminal != undefined) {
                 //debugLog('Terminal state reached', Terminal);
@@ -178,7 +175,7 @@ class MonteCarloTreeSearch {
         }
     }
 
-    init(initialBoard, initialPlayer, timeLimit = 2500, maxDepth = 500) {
+    init(initialBoard, initialPlayer, timeLimit = 1000, maxDepth = 500) {
         this.initialBoard = initialBoard;
         this.initialPlayer = initialPlayer;
         this.initialSate = new SimulationState(initialBoard, initialPlayer);
@@ -227,32 +224,45 @@ class MonteCarloTreeSearch {
         }
     }
 
-    //Returns the action with most wins in the simulation
+    //Returns the action with highest win rate
     getBestAction(results) {
-        let allActions = [];
-        let iterations = 0;
-        results.forEach(result => {
-            allActions = allActions.concat(result[0]);
-            iterations += result[1];
-        });
-
         let bestAction = null;
         let bestScore = -Infinity;
-        let bestActionAverageTurns = 0;
+        let bestActionAverageTurns = Infinity;
+        let bestFastWin = Infinity;
+        let totalIterations = 0;
 
-        console.log(results)
-        console.log(allActions)
-
-        for (const [action, score, visits, turns] of Object.entries(allActions)) {
-            if(score > bestScore) {
-                bestAction = action;
-                bestScore = score / visits;
-                bestActionAverageTurns = turns / visits;
+        for (const result of results) {
+            if (!result || !result[0]) continue;
+            
+            const [actionStats, iterations] = result;
+            totalIterations += iterations;
+    
+            for (const actionStat of actionStats) {
+                if (!actionStat) continue;
+                
+                const [action, wins, visits, turns] = actionStat;
+                const score = visits > 0 ? wins / visits : 0;
+                const actionAverageTurns = visits > 0 ? turns / visits : 0;
+                const fastWin = actionAverageTurns / score;
+    
+                if (fastWin < bestFastWin) {
+                    bestAction = action;
+                    bestScore = score;
+                    bestFastWin = fastWin;
+                    bestActionAverageTurns = visits > 0 ? turns / visits : 0;
+                }
             }
         }
-
-        console.log(`${iterations} iterations in ${this.timeLimit}ms`);
-        console.log(bestAction, bestScore, bestActionAverageTurns)
+    
+        debugLog('MCTS results:', {
+            iterations: totalIterations,
+            timeLimit: this.timeLimit,
+            bestAction,
+            bestScore,
+            bestActionAverageTurns
+        });
+    
         return bestAction;
     }
 }

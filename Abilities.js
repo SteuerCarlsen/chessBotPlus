@@ -3,13 +3,10 @@ class Ability {
     constructor(name, targetGroup = {selfTarget: false, friendlyTarget: false, opponentTarget: false}, components, range) {
         this.name = name;
         this.range = range;
-        this.selfTarget = targetGroup.selfTarget;
-        this.friendlyTarget = targetGroup.friendlyTarget;
-        this.opponentTarget = targetGroup.opponentTarget;
         this.targetLookup = new Map([
-            ['self', this.selfTarget],
-            ['friendly', this.friendlyTarget],
-            ['opponent', this.opponentTarget]
+            ['self', targetGroup.selfTarget],
+            ['friendly', targetGroup.friendlyTarget],
+            ['opponent', targetGroup.opponentTarget]
         ]);
         for (const key in components) {
             this.addComponent(key, components[key]);
@@ -53,6 +50,12 @@ class Ability {
         : actor.objType === target.objType ? 'friendly'
         : 'opponent';
         
+        /*debugLog('Checking if ability can target', {
+            actor: actor.name,
+            target: target.name,
+            type
+        });*/
+
         return this.targetLookup.get(type);
     }
 
@@ -61,8 +64,8 @@ class Ability {
 
 // Ability Classes for abilities with same method needs (like a physical attack, a buff, etc.)
 class PhysicalAbility extends Ability {
-    constructor(name, targetGroup, components, range) {
-        super(name, targetGroup, components, range);
+    constructor(name, components, range) {
+        super(name, {selfTarget: false, friendlyTarget: false, opponentTarget: true}, components, range);
     }
     // Use the ability given actor and target
     apply(actor, target, isReal = true) {
@@ -112,8 +115,8 @@ const abilityComponentMap = {
 };
 
 // Abilities
-const WeaponAttack = new PhysicalAbility("Weapon Attack", {opponentTarget: true}, {
-    PhysicalDamageComp: 10,
+const WeaponAttack = new PhysicalAbility("Weapon Attack", {
+    PhysicalDamageComp: 50,
     PhysicalHitComp: 0.5,
     PhysicalHitGuaranteedComp
 }, 1);

@@ -376,7 +376,7 @@ class GameState {
     }
 
     advanceTurn() {
-        this.sharedTurnAdvance();
+        return this.sharedTurnAdvance();
     }
 
     sharedTurnAdvance() {
@@ -419,7 +419,7 @@ class GameState {
 
     //Method to check if the game state is terminal (win or loss)
     isTerminal() {
-        return [this.checkWinCondition('enemy'), this.checkWinCondition('player'),this.turn];
+        return [this.checkWinCondition('enemy'), this.checkWinCondition('player'), this.turn];
     }
 
     //Method to clone the current game state for use in new nodes to simulate without affecting other nodes
@@ -486,6 +486,7 @@ class SimulationState extends GameState {
             }
 
             const abilities = piece.abilities;
+
             if (abilities?.length) {
                 const abilitiesLength = abilities.length;
                 for (let k = 0; k < abilitiesLength; k++) {
@@ -495,6 +496,15 @@ class SimulationState extends GameState {
                     for (let l = 0; l < rangeLength; l++) {
                         const targetIndex = range[l];
                         const target = this.boardArray[targetIndex];
+
+                        /*debugLog('Checking ability target', {
+                            piece: piece.constructor.name,
+                            pieceIndex,
+                            targetIndex,
+                            hasTarget: !!target,
+                            canTarget: target ? ability.canTarget(piece, target) : false
+                        });*/
+
                         if (target != null && ability.canTarget(piece, target)) {
                             allAbilities[actionCount] = ['ability', pieceIndex, targetIndex, k];
                             allActions[actionCount++] = ['ability', pieceIndex, targetIndex, k];
@@ -504,8 +514,14 @@ class SimulationState extends GameState {
             }
         }
 
-        return actionCount === allActions.length ? allActions : allActions.slice(0, actionCount);
-                    
+        /*debugLog('Action counts:', {
+            total: actionCount,
+            playerTargets: foundTargets.player,
+            enemyTargets: foundTargets.enemy,
+            currentPlayer: this.currentPlayer
+        });*/
+
+        return actionCount === allActions.length ? allActions : allActions.slice(0, actionCount);         
     }
 
     //Method to play the given action in the simulation
@@ -524,6 +540,7 @@ class SimulationState extends GameState {
             //debugLog(`Ability applied`);
         }
         this.lastAction = action;
+        return this.advanceTurn()
     }
 
     //Method to get the last action played
