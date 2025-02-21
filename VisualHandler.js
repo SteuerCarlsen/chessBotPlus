@@ -164,6 +164,28 @@ const VisualAbilityBar = {
     A7: new VisualElementAbility('Ability7')
 };
 
+const CombatButtons = {
+    startCombat: new VisualElement('startCombatButton'),
+    endTurn: new VisualElement('endTurnButton'),
+};
+
+CombatButtons.startCombat.addEventListener('click', () => {
+    if (!CurrentCombat.started) {
+        return CurrentCombat.start();
+    }
+    return console.log('Combat already started');
+});
+
+CombatButtons.endTurn.addEventListener('click', () => {
+    if (CurrentCombat.started) {
+        if (CurrentCombat.currentPlayer === 'player') {
+            return CurrentCombat.advanceTurn();
+        }
+        return console.log('Not your turn');
+    }
+    return console.log('Combat not started');
+});
+
 // A class specifically for menu elements
 class VisualElementMenu extends VisualElement {
     constructor(id, pageId) {

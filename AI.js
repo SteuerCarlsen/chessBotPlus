@@ -1,3 +1,61 @@
+let comparedSimulations = null;
+
+async function testSimulationValues (simulations = 10, timeLimit = 1000, maxDepth = 500, explorationConstant = 1.41) {
+    let results = [];
+
+    for (let i = 0; i < simulations; i++) {
+        let simulationAI = new MonteCarloTreeSearch(explorationConstant);
+        simulationAI.init(Board.exportBoard(), 'enemy', timeLimit, maxDepth);
+        const result = await simulationAI.runSearch(true)
+        results.push(result);
+        simulationAI.cleanupWorkers();
+    }
+
+    let totalIterations = 0;
+    let totalBestScore = 0;
+    let totalBestActionAverageTurns = 0;
+
+    for (const result of results) {
+        totalIterations += result.iterations;
+        totalBestScore += result.bestScore;
+        totalBestActionAverageTurns += result.bestActionAverageTurns;
+    }
+
+    const averageIterations = totalIterations / simulations;
+    const averageBestScore = totalBestScore / simulations;
+    const averageBestActionAverageTurns = totalBestActionAverageTurns / simulations;
+
+    return {
+        averageIterations: averageIterations,
+        averageBestScore: averageBestScore,
+        averageBestActionAverageTurns: averageBestActionAverageTurns,
+    }
+}
+
+async function compareSimulationValues(cases = []) {
+    let output = [cases, {averageIterations: [], averageBestScore: [], averageBestActionAverageTurns: []}, {averageIterationsFactor: [1], averageBestScoreFactor: [1], averageBestActionAverageTurnsFactor: [1]}];
+
+    for (const testCase of cases) {
+        const result = await testSimulationValues(testCase.simulations, testCase.timeLimit, testCase.maxDepth, testCase.explorationConstant);
+        output[1].averageIterations.push(result.averageIterations);
+        output[1].averageBestScore.push(result.averageBestScore);
+        output[1].averageBestActionAverageTurns.push(result.averageBestActionAverageTurns);
+    }
+
+    for (let i = 1; i < cases.length; i++) {
+        output[2].averageIterationsFactor.push(output[1].averageIterations[i] / output[1].averageIterations[0]);
+        output[2].averageBestScoreFactor.push(output[1].averageBestScore[i] / output[1].averageBestScore[0]);
+        output[2].averageBestActionAverageTurnsFactor.push(output[1].averageBestActionAverageTurns[i] / output[1].averageBestActionAverageTurns[0]);
+    }
+
+    console.log('Simulation comparison results:', output);
+    comparedSimulations = output;
+}
+
+const testCases = [
+    {simulations: 10, timeLimit: 1000, maxDepth: 500, explorationConstant: 0.6},
+]
+
 //AI Prototype holds info and methods for the in-game AI controlling pieces
 class AIPrototype {
     constructor(type) {
@@ -66,7 +124,7 @@ class AIPrototype {
 
 //TreeNode Prototype holds info and methods for the nodes in the Monte Carlo Tree Search
 class TreeNode {
-    constructor(state) {
+    constructor(state, explorationConstant = 0.6) {
         this.state = state;         // Current game position
         this.parent = null;         // Previous position
         this.children = [];         // Next possible positions
@@ -74,8 +132,7 @@ class TreeNode {
         this.visits = 0;           // How many times we tried this position
         this.turns = 0;
         this.untriedActions = [...state.getPossibleActions()];  // Moves we haven't tried yet
-        this.explorationConstant = 1.41;
-        this.depth = 0;
+        this.explorationConstant = explorationConstant;
     }
     //Selects child node based on UCT (Upper Confidence Bound for Trees) formula
     selectChild() {
@@ -95,17 +152,17 @@ class TreeNode {
         if(this.untriedActions.length === 0) return null;
         const actionIndex = Math.floor(Math.random() * this.untriedActions.length);
         const action = this.untriedActions.splice(actionIndex, 1)[0];
-        this.untriedActions.splice(actionIndex, 1);
 
         const nextState = this.state.clone();
         nextState.play(action);
 
-        const child = new TreeNode(nextState, this.depth + 1);
+        const child = new TreeNode(nextState, this.explorationConstant);
         child.parent = this;
         this.children.push(child);
 
         return child
     }
+
     //Simulates the game from the current node to a terminal state
     simulate(maxDepth) {
         let currentState = this.state.clone();
@@ -157,7 +214,8 @@ class TreeNode {
 
 //MonteCarloTreeSearch Prototype holds info and methods for the Monte Carlo Tree Search
 class MonteCarloTreeSearch {
-    constructor() {
+    constructor(explorationConstant = 0.6) {
+        this.explorationConstant = explorationConstant;
         this.workers = [];
         this.numWorkers = 4;
         this.initWorkers();
@@ -186,7 +244,7 @@ class MonteCarloTreeSearch {
     }
 
     //Runs the Monte Carlo Tree Search within the given parameters
-    async runSearch() {
+    async runSearch(returnMetadata = false) {
         try {
             const promises = this.workers.map((worker, index) => {
                 const startIndex = index * this.actionsPerWorker;
@@ -201,6 +259,7 @@ class MonteCarloTreeSearch {
                         maxDepth: this.maxDepth,
                         minNodeRepeats: 1,
                         maxNodeRepeats: 10,
+                        explorationConstant: this.explorationConstant,
                     });
 
                     worker.onmessage = function(e) {
@@ -215,9 +274,7 @@ class MonteCarloTreeSearch {
 
             const results = await Promise.all(promises);
 
-            console.log('MCTS Results:', results);
-
-            return this.getBestAction(results);
+            return this.getBestAction(results, returnMetadata);
         } catch (error) {
             console.error('MCTS Errror:', error);
             return false;
@@ -225,7 +282,7 @@ class MonteCarloTreeSearch {
     }
 
     //Returns the action with highest win rate
-    getBestAction(results) {
+    getBestAction(results, returnMetadata = false) {
         let bestAction = null;
         let bestScore = -Infinity;
         let bestActionAverageTurns = Infinity;
@@ -262,6 +319,14 @@ class MonteCarloTreeSearch {
             bestScore,
             bestActionAverageTurns
         });
+
+        if (returnMetadata) {
+            return {
+                iterations: totalIterations,
+                bestScore: bestScore,
+                bestActionAverageTurns: bestActionAverageTurns,
+            }
+        }
     
         return bestAction;
     }

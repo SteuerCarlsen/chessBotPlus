@@ -189,19 +189,21 @@ class BoardPrototype {
         if (this.editorMode) {
             editSquare(index);
         }
-        const entity = this.boardArray[index];
-        //console.log(`Selecting square at index ${index}`);
-        //console.log(entity);
-        if(entity === "RG"){
-            CurrentCombat.selectedPiece.move(index);
-            CurrentCombat.advanceTurn();
-            //console.log(`Selected square at index ${index} is within range`);
-        } else if(entity){
-            CurrentCombat.selectPiece(entity);
-        } else {
-            //console.log('No entity here');
-            return false
-        }
+        if (CurrentCombat.currentPlayer === 'player') {
+            const entity = this.boardArray[index];
+            //console.log(`Selecting square at index ${index}`);
+            //console.log(entity);
+            if(entity === "RG"){
+                CurrentCombat.selectedPiece.move(index);
+                CurrentCombat.advanceTurn();
+                //console.log(`Selected square at index ${index} is within range`);
+            } else if(entity){
+                CurrentCombat.selectPiece(entity);
+            } else {
+                //console.log('No entity here');
+                return false
+            }  
+        } else {return console.log("Not your turn")}
     }
 
     exportBoard() {
@@ -587,10 +589,6 @@ class RealGameState extends GameState {
     }
 
     start() {
-        if (this.started) {
-            console.log('Game already started');
-            return;
-        }
         console.log("Game starting");
         this.started = true;
         this.totalTimer = setInterval(() => {
@@ -618,9 +616,9 @@ class RealGameState extends GameState {
         this.sharedTurnAdvance();
     }
 
-    turnAction() {
+    async turnAction() {
         if(this.currentPlayer === 'enemy'){
-            this.enemyAI.startTurn();
+            await this.enemyAI.startTurn();
             this.advanceTurn();
         }
     }

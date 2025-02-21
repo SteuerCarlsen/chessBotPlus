@@ -7,8 +7,8 @@ importScripts(
 
 self.onmessage = function(e) {
     try {
-        const {initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats} = e.data;
-        const result = runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats);
+        const {initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats, explorationConstant} = e.data;
+        const result = runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats, maxNodeRepeats, explorationConstant);
         sendMessage(result);
     } catch (error) {
         sendMessage({
@@ -39,18 +39,18 @@ function sendMessage(data) {
     });
 }*/
 
-function runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats = 1, maxNodeRepeats = 1) {
+function runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats = 1, maxNodeRepeats = 1, explorationConstant = 0.6) {
     let results = [];
     let iterations = 0;
     const timePerMove = timeLimit / (endIndex - startIndex);
-    let initialNode = new TreeNode(new SimulationState(initialBoard, initialPlayer));
+    let initialNode = new TreeNode(new SimulationState(initialBoard, initialPlayer), explorationConstant);
     let initialActions = initialNode.state.getPossibleActions().slice(startIndex, endIndex);
 
     for (const action of initialActions) {
         const state = new SimulationState(initialBoard, initialPlayer);
         state.play(action);
 
-        const root = new TreeNode(state);
+        const root = new TreeNode(state, initialNode.explorationConstant);
         const startTime = Date.now();
 
         while (Date.now() - startTime < timePerMove) {
