@@ -29,7 +29,7 @@ function sendMessage(data) {
     }
 }
 
-function debugLog(message, data) {
+/*function debugLog(message, data) {
     sendMessage({
         debug: {
             message,
@@ -37,7 +37,7 @@ function debugLog(message, data) {
             timestamp: Date.now()
         }
     });
-}
+}*/
 
 function runSimulation(initialBoard, initialPlayer, startIndex, endIndex, timeLimit, maxDepth, minNodeRepeats = 1, maxNodeRepeats = 1) {
     let results = [];

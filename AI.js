@@ -178,7 +178,7 @@ class MonteCarloTreeSearch {
         }
     }
 
-    init(initialBoard, initialPlayer, timeLimit = 1000, maxDepth = 200) {
+    init(initialBoard, initialPlayer, timeLimit = 2500, maxDepth = 500) {
         this.initialBoard = initialBoard;
         this.initialPlayer = initialPlayer;
         this.initialSate = new SimulationState(initialBoard, initialPlayer);

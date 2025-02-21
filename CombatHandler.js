@@ -1,3 +1,9 @@
+const debugLog = (typeof self !== 'undefined' && self.debugLog) 
+    ? self.debugLog 
+    : (typeof console !== 'undefined' && console.log) 
+    ? console.log.bind(console) 
+    : () => {};
+
 class BoardPrototype {
     constructor(editorMode = false) {
         this.boardArray = null;
@@ -459,50 +465,47 @@ class SimulationState extends GameState {
 
     //Get array of possible actions for the current player
     getPossibleActions() {
-        const pieces = this.currentPlayer === 'player' ? this.board.playerPieces : this.board.enemyPieces;
+        const allActions = new Array(100);
+        const allMoves = new Array(64);
+        const allAbilities = new Array(64);
+        let actionCount = 0;
+        
+        const pieces = this.board[this.currentPlayer === 'player' ? 'playerPieces' : 'enemyPieces'];
+        const piecesLength = pieces.length;
 
-        let possibleMoves = [];
-        let possibleAbilities = [];
+        for (let i = 0; i < piecesLength; i++) {
+            const piece = pieces[i];
+            const pieceIndex = piece.temp.index;
 
-        for (const piece of pieces) {
-            possibleMoves = possibleMoves.concat(this.getPossibleMoves(piece));
-            possibleAbilities = possibleAbilities.concat(this.getPossibleAbilites(piece));
-        }
+            const moves = piece.getMovementRange(this.board);
+            const movesLength = moves.length;
 
-        return possibleMoves.concat(possibleAbilities);
-    }
+            for (let j = 0; j < movesLength; j++) {
+                allMoves[actionCount] = ['movement', pieceIndex, moves[j]];
+                allActions[actionCount++] = ['movement', pieceIndex, moves[j]];
+            }
 
-    getPossibleAbilites(piece) {
-        let possibleAbilities = new Array(64);
-        let abilityCount = 0;
-        const pieceIndex = piece.temp.index;
-        const abilities = piece.abilities;
-
-        if (!abilities?.length) return [];
-
-        for (let i = 0; i < abilities.length; i++) {
-            const range = abilities[i].getRange(pieceIndex, this.board);
-            for (const targetIndex of range) {
-                if (this.boardArray[targetIndex] instanceof Piece) {
-                    possibleAbilities[abilityCount++] = ['ability', pieceIndex, targetIndex, i];
+            const abilities = piece.abilities;
+            if (abilities?.length) {
+                const abilitiesLength = abilities.length;
+                for (let k = 0; k < abilitiesLength; k++) {
+                    const ability = abilities[k];
+                    const range = ability.getRange(pieceIndex, this.board);
+                    const rangeLength = range.length;
+                    for (let l = 0; l < rangeLength; l++) {
+                        const targetIndex = range[l];
+                        const target = this.boardArray[targetIndex];
+                        if (target != null && ability.canTarget(piece, target)) {
+                            allAbilities[actionCount] = ['ability', pieceIndex, targetIndex, k];
+                            allActions[actionCount++] = ['ability', pieceIndex, targetIndex, k];
+                        }
+                    }
                 }
             }
         }
 
-        return possibleAbilities.slice(0, abilityCount);
-    }
-
-    getPossibleMoves(piece) {
-        let possibleMoves = new Array(64);
-        let moveCount = 0;
-        const pieceIndex = piece.temp.index;
-        const moves = piece.getMovementRange(this.board);
-
-        for (const move of moves) {
-            possibleMoves[moveCount++] = ['movement', pieceIndex, move];
-        }
-
-        return possibleMoves.slice(0, moveCount);
+        return actionCount === allActions.length ? allActions : allActions.slice(0, actionCount);
+                    
     }
 
     //Method to play the given action in the simulation

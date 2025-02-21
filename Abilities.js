@@ -1,8 +1,16 @@
 // Overall Ability Class used to gather all components
 class Ability {
-    constructor(name, components, range) {
+    constructor(name, targetGroup = {selfTarget: false, friendlyTarget: false, opponentTarget: false}, components, range) {
         this.name = name;
         this.range = range;
+        this.selfTarget = targetGroup.selfTarget;
+        this.friendlyTarget = targetGroup.friendlyTarget;
+        this.opponentTarget = targetGroup.opponentTarget;
+        this.targetLookup = new Map([
+            ['self', this.selfTarget],
+            ['friendly', this.friendlyTarget],
+            ['opponent', this.opponentTarget]
+        ]);
         for (const key in components) {
             this.addComponent(key, components[key]);
         }
@@ -40,13 +48,21 @@ class Ability {
         //debugLog('Returning from use')
     }
 
+    canTarget(actor, target) {
+        const type = actor === target ? 'self'
+        : actor.objType === target.objType ? 'friendly'
+        : 'opponent';
+        
+        return this.targetLookup.get(type);
+    }
+
     static apply() {}
 }
 
 // Ability Classes for abilities with same method needs (like a physical attack, a buff, etc.)
 class PhysicalAbility extends Ability {
-    constructor(name, components, range) {
-        super(name, components, range);
+    constructor(name, targetGroup, components, range) {
+        super(name, targetGroup, components, range);
     }
     // Use the ability given actor and target
     apply(actor, target, isReal = true) {
@@ -96,7 +112,7 @@ const abilityComponentMap = {
 };
 
 // Abilities
-const WeaponAttack = new PhysicalAbility("Weapon Attack", {
+const WeaponAttack = new PhysicalAbility("Weapon Attack", {opponentTarget: true}, {
     PhysicalDamageComp: 10,
     PhysicalHitComp: 0.5,
     PhysicalHitGuaranteedComp

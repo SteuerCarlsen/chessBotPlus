@@ -239,7 +239,9 @@ class ResourceStat extends Stat {
         return this.currentValue;
     }
 
-    static zeroed() {}
+    static zeroed() {
+        debugLog('Resource stat zeroed', this);
+    }
 
     static calculateStats() {}
 }
