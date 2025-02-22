@@ -37,12 +37,9 @@ class Ability {
             ability: this.name,
             isReal
         });*/
-        if(!isReal) {
-            this.apply(actor, target);
-        } else {
-            this.apply(actor, target, isReal);
-        }
-        //debugLog('Returning from use')
+
+        this.apply(actor, target, isReal);
+
     }
 
     canTarget(actor, target) {
@@ -64,29 +61,44 @@ class Ability {
 
 // Ability Classes for abilities with same method needs (like a physical attack, a buff, etc.)
 class PhysicalAbility extends Ability {
-    constructor(name, components, range) {
+    constructor(name, components, range = 1) {
         super(name, {selfTarget: false, friendlyTarget: false, opponentTarget: true}, components, range);
     }
     // Use the ability given actor and target
     apply(actor, target, isReal = true) {
-        /*debugLog('Applying physical ability', {
-            actor: actor.name,
-            target: target.name,
-            damage: this.PhysicalDamageComp?.damage
-        });*/
         if (this.hasComponent('PhysicalHitGuaranteedComp') || Math.random() <= this.PhysicalHitComp.hitChance) {
-            const damage = this.PhysicalDamageComp.damage;
-            const beforeHealth = target.resourceStats.health.getCurrentValue();
-            target.resourceStats.health.reduce(damage, isReal);
-            const afterHealth = target.resourceStats.health.getCurrentValue();
+            target.resourceStats.health.reduce(this.PhysicalDamageComp.damage, isReal);
 
-            /*debugLog('Damage applied', {
-                damage,
-                beforeHealth,
-                afterHealth,
-            });*/
+            if (!isReal) {return};
+
+            combatLog.addEntry('ability', {
+                piece: actor.name,
+                ability: this.name,
+                target: target.name,
+                value: this.PhysicalDamageComp.damage
+            });
+        };
+    };
+}
+
+class RangedAbility extends Ability {
+    constructor(name, components, range = 3) {
+        super(name, {selfTarget: false, friendlyTarget: false, opponentTarget: true}, components, range);
+    }
+
+    apply(actor, target, isReal = true) {
+        if (Math.random() <= this.RangedHitComp.hitChance) {
+            target.resourceStats.health.reduce(this.RangedDamageComp.damage, isReal);
+
+            if (!isReal) {return};
+
+            combatLog.addEntry('ability', {
+                piece: actor.name,
+                ability: this.name,
+                target: target.name,
+                value: this.RangedDamageComp.damage
+            });
         }
-        //debugLog('Returning from apply')
     }
 }
 
@@ -107,11 +119,25 @@ class PhysicalHitGuaranteedComp {
     constructor() {}
 }
 
+class RangedHitComp {
+    constructor(baseValue) {
+        this.hitChance = baseValue;
+    }
+}
+
+class RangedDamageComp {
+    constructor(baseValue) {
+        this.damage = baseValue;
+    }
+}
+
 // Map of components for dynamically creating new components when creating item/abilities/etc.
 const abilityComponentMap = {
     PhysicalDamageComp: PhysicalDamageComp,
     PhysicalHitComp: PhysicalHitComp,
     PhysicalHitGuaranteedComp: PhysicalHitGuaranteedComp,
+    RangedDamageComp: RangedDamageComp,
+    RangedHitComp: RangedHitComp,
 };
 
 // Abilities
@@ -119,11 +145,17 @@ const WeaponAttack = new PhysicalAbility("Weapon Attack", {
     PhysicalDamageComp: 50,
     PhysicalHitComp: 0.5,
     PhysicalHitGuaranteedComp
-}, 1);
+});
+
+const RangedWeaponAttack = new RangedAbility("Ranged Weapon Attack", {
+    RangedDamageComp: 50,
+    RangedHitComp: 0.5
+});
 
 // Map of abilities for dynamically creating new abilities when creating item/abilities/etc.
 const AbilityMap = new Map(
     [
         ['WeaponAttack', WeaponAttack],
+        ['RangedWeaponAttack', RangedWeaponAttack],
     ],
 );

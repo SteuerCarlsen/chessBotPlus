@@ -14,6 +14,11 @@ function trimArray(arr) {
     }, []);
 }
 
+function roundToDecimals (value, decimals) {
+    const multiplier = Math.pow(10, decimals);
+    return Math.round(value * multiplier) / multiplier;
+}
+
 const combatLog = {
     log: [],
     shownLog: [],
@@ -138,3 +143,61 @@ function calculateNeighbors(size = 64, directions = [[-1, 0], [0, -1], [0, 1], [
     }
     return neighborMap;
 }
+
+let comparedSimulations = null;
+
+async function testSimulationValues (simulations = 10, timeLimit = 1000, maxDepth = 500, explorationConstant = 1.41, iterationGoal) {
+    let results = [];
+
+    for (let i = 0; i < simulations; i++) {
+        let simulationAI = new MonteCarloTreeSearch(explorationConstant);
+        simulationAI.init(Board.exportBoard(), 'enemy', timeLimit, maxDepth, iterationGoal);
+        const result = await simulationAI.runSearch(true)
+        results.push(result);
+        //simulationAI.cleanupWorkers();
+    }
+
+    let totalIterations = 0;
+    let totalBestScore = 0;
+    let totalBestActionAverageTurns = 0;
+
+    for (const result of results) {
+        totalIterations += result.iterations;
+        totalBestScore += result.bestScore;
+        totalBestActionAverageTurns += result.bestActionAverageTurns;
+    }
+
+    const averageIterations = Math.round(totalIterations / simulations);
+    const averageBestScore = roundToDecimals(totalBestScore / simulations, 2);
+    const averageBestActionAverageTurns = Math.round(totalBestActionAverageTurns / simulations);
+
+    return {
+        averageIterations: averageIterations,
+        averageBestScore: averageBestScore,
+        averageBestActionAverageTurns: averageBestActionAverageTurns,
+    }
+}
+
+async function compareSimulationValues(cases = []) {
+    let output = [cases, {averageIterations: [], averageBestScore: [], averageBestActionAverageTurns: []}, {averageIterationsFactor: [1], averageBestScoreFactor: [1], averageBestActionAverageTurnsFactor: [1]}];
+
+    for (const testCase of cases) {
+        const result = await testSimulationValues(testCase.simulations, testCase.timeLimit, testCase.maxDepth, testCase.explorationConstant);
+        output[1].averageIterations.push(result.averageIterations);
+        output[1].averageBestScore.push(result.averageBestScore);
+        output[1].averageBestActionAverageTurns.push(result.averageBestActionAverageTurns);
+    }
+
+    for (let i = 1; i < cases.length; i++) {
+        output[2].averageIterationsFactor.push(roundToDecimals(output[1].averageIterations[i] / output[1].averageIterations[0], 2));
+        output[2].averageBestScoreFactor.push(roundToDecimals(output[1].averageBestScore[i] / output[1].averageBestScore[0], 2));
+        output[2].averageBestActionAverageTurnsFactor.push(roundToDecimals(output[1].averageBestActionAverageTurns[i] / output[1].averageBestActionAverageTurns[0], 2));
+    }
+
+    console.log('Simulation comparison results:', output);
+    comparedSimulations = output;
+}
+
+const testCases = [
+    {simulations: 1, timeLimit: 1000, maxDepth: 500, explorationConstant: 0.6},
+]

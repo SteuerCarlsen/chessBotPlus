@@ -54,7 +54,7 @@ const TestBoard = [,,,,,,,
         wisdom: 10,
         dexterity: 10,
         initiative: 10,
-    },['WeaponAttack']],,,['terrain'],,['terrain'],,,,,,
+    },['WeaponAttack', 'RangedWeaponAttack']],,,['terrain'],,['terrain'],,,,,,
     ["enemyPiece","Enemy Character","None",{
         strength: 10,
         agility: 10,

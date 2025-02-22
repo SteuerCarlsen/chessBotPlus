@@ -437,7 +437,7 @@ class GameState {
         let totalHealth = 0;
         if(actor == 'enemy'){
             for(const piece of this.board.playerPieces){
-                totalHealth += Math.max(0, piece.resourceStats.health.getCurrentValue());
+                totalHealth += piece.resourceStats.health.getCurrentValue();
                 if(totalHealth > 0){
                     return false;
                 }
@@ -445,7 +445,7 @@ class GameState {
             return true;
         } else {
             for(const piece of this.board.enemyPieces){
-                totalHealth += Math.max(0, piece.resourceStats.health.getCurrentValue());
+                totalHealth +=piece.resourceStats.health.getCurrentValue();
                 if(totalHealth > 0){
                     return false;
                 }
@@ -618,6 +618,7 @@ class RealGameState extends GameState {
 
     async turnAction() {
         if(this.currentPlayer === 'enemy'){
+            console.log('Enemy turn');
             await this.enemyAI.startTurn();
             this.advanceTurn();
         }
