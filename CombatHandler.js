@@ -12,8 +12,6 @@ class BoardPrototype {
         this.neighborMap = new Array(64);
         this.coordinateMap = CoordinateMap;
         this.losLineMap = LOSLineMap;
-        this.calculatedSquares = null;
-        this.rangeMap = null;
         this.playerPieces = [];
         this.enemyPieces = [];
         this.distance = null;
@@ -67,34 +65,34 @@ class BoardPrototype {
     }
 
     calculateLos(index, target) {
-        //console.log(index + " " + target)
-        if(index != target){
-            for (const value of LOSLineMap[index][target]) {
-                if (this.simpleLOSBoard[value]) {
-                    return false;
-                }
-            }
-            return true;
+        if(index == target) return false;
+
+        const losLine = LOSLineMap[index][target];
+        const losBoard = this.simpleLOSBoard;
+
+        for(let i = 0; i < losLine.length; i++) {
+            if(losBoard[losLine[i]]) return false;
         }
-        return false;
+        return true;
     }
 
     calculateRange(index, range, checkLos = false, acceptTargets = false) {
-        this.rangeMap = new Array(64);
+        let rangeMap = new Uint8Array(64);
         let rangeMapIndex = 0;
-        this.calculatedSquares = new Uint8Array(64);
-
+        let calculatedSquares = new Uint8Array(64);
         const queueIndices = new Uint8Array(64);
         const queueRanges = new Uint8Array(64);
+
+        
         let queueStart = 0;
         let queueEnd = 1;
 
         queueIndices[0] = index;
         queueRanges[0] = range + 1;
-        this.calculatedSquares[index] = range + 1;
+        calculatedSquares[index] = range + 1;
 
         if(acceptTargets) {
-            this.rangeMap[rangeMapIndex++] = index;
+            rangeMap[rangeMapIndex++] = index;
         }
 
         const {simpleLOSBoard, simpleMoveBoard, boardArray} = this;
@@ -115,21 +113,21 @@ class BoardPrototype {
                 const neighbor = neighbors[i];
                 const newRange = currentRange - 1;
     
-                if(newRange > this.calculatedSquares[neighbor]) {
+                if(newRange > calculatedSquares[neighbor]) {
                     if(checkLos) {
                         if(this.calculateLos(index, neighbor)) {
                             if(!simpleLOSBoard[neighbor]) {
-                                this.rangeMap[rangeMapIndex++] = neighbor;
-                                this.calculatedSquares[neighbor] = newRange;
+                                rangeMap[rangeMapIndex++] = neighbor;
+                                calculatedSquares[neighbor] = newRange;
                                 queueIndices[queueEnd] = neighbor;
                                 queueRanges[queueEnd++] = newRange;
                             } else if(acceptTargets && isPiece(neighbor)) {
-                                this.rangeMap[rangeMapIndex++] = neighbor;
+                                rangeMap[rangeMapIndex++] = neighbor;
                             }
                         }
                     } else if(!simpleMoveBoard[neighbor]) {
-                        this.rangeMap[rangeMapIndex++] = neighbor;
-                        this.calculatedSquares[neighbor] = newRange;
+                        rangeMap[rangeMapIndex++] = neighbor;
+                        calculatedSquares[neighbor] = newRange;
                         queueIndices[queueEnd] = neighbor;
                         queueRanges[queueEnd++] = newRange;
                     }
@@ -137,7 +135,7 @@ class BoardPrototype {
             }
         }
     
-        return this.rangeMap.slice(0, rangeMapIndex);
+        return rangeMap.slice(0, rangeMapIndex);
     }
 
     calculateMoveDistanceWrapper(index, targetIndex, maxDistance = 14){
