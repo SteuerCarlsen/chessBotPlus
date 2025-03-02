@@ -206,14 +206,25 @@
     </div>   
 </body>
 <footer>
-    <script type="text/javascript" src='Utilities.js'> </script>
-    <script type="text/javascript" src='VisualHandler.js'> </script>
-    <script type="text/javascript" src='Stats.js'> </script>
-    <script type="text/javascript" src='Abilities.js'> </script>
-    <script type="text/javascript" src='AI.js'> </script>
-    <script type="text/javascript" src='CombatHandler.js'> </script>
-    <script type="text/javascript" src='Characters.js'> </script>
-    <script type="text/javascript" src='Items.js'> </script>
-    <script type="text/javascript" src='Editor.js'> </script>
+    <script>
+        // Global initialization function for main thread
+        async function initWasm() {
+            const { default: init, calculate_los } = await import('./mcts_rust/pkg/mcts_rust.js');
+            await init();
+            window.calculate_los = calculate_los;
+            console.log('WASM initialized successfully in main thread');
+        }
+        // Initialize when page loads
+        initWasm().catch(console.error);
+    </script>
+    <script type="text/javascript" src='Utilities.js'></script>
+    <script type="text/javascript" src='VisualHandler.js'></script>
+    <script type="text/javascript" src='Stats.js'></script>
+    <script type="text/javascript" src='Abilities.js'></script>
+    <script type="text/javascript" src='AI.js'></script>
+    <script type="text/javascript" src='CombatHandler.js'></script>
+    <script type="text/javascript" src='Characters.js'></script>
+    <script type="text/javascript" src='Items.js'></script>
+    <script type="text/javascript" src='Editor.js'></script>
 </footer>
 </html>

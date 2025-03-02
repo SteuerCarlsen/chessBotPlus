@@ -35,7 +35,6 @@ class EnemyEncounter extends Character {
 
 const Boss1 = new EnemyEncounter('Boss1', 'The First Boss', "monteCarlo", new Array(64));
 
-const Board = new BoardPrototype()
 const TestBoard = [,,,,,,,
   ["playerPiece","Player Character","None",{ 
     strength: 10,
@@ -63,7 +62,10 @@ const TestBoard = [,,,,,,,
         wisdom: 10,
         dexterity: 10,
         initiative: 10,
-    },['WeaponAttack']],,,,['terrain'],['terrain']];
+    },['WeaponAttack']],,,,['terrain'],['terrain']
+];
+
+const Board = new BoardPrototype()
 Board.init(TestBoard);
 const CurrentCombat = new RealGameState(Board);
 CurrentCombat.init();
