@@ -549,7 +549,7 @@ class SimulationState extends GameState {
         });
 
         return actionCount === allActions.length ? allActions : allActions.slice(0, actionCount);         
-    }*/
+    }
 
     //Method to play the given action in the simulation
     play(action) {
@@ -573,7 +573,7 @@ class SimulationState extends GameState {
     //Method to get the last action played
     getLastAction() {
         return this.lastAction;
-    }
+    }*/
     
 }
 
