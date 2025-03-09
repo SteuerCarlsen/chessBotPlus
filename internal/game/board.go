@@ -22,6 +22,22 @@ type Board struct {
 	aiPieceIndexes     []uint8
 }
 
+func (b *Board) Clone() Board {
+	returnBoardArray := [64]Piece{}
+
+	for i, piece := range b.BoardArray {
+		returnBoardArray[i] = piece.Clone()
+	}
+
+	return Board{
+		BoardArray:         returnBoardArray,
+		MoveBoard:          b.MoveBoard,
+		LOSBoard:           b.LOSBoard,
+		playerPieceIndexes: b.playerPieceIndexes,
+		aiPieceIndexes:     b.aiPieceIndexes,
+	}
+}
+
 func (b *Board) InitBoard(boardArray [64]Piece) {
 	b.BoardArray = boardArray
 	b.MoveBoard = 0
@@ -97,19 +113,15 @@ func (b *Board) CalculateRange(index uint8, rangeValue uint8, checkLos bool) []u
 		}
 
 		for _, neighbor := range NeighborMap[currentIndex] {
-			if neighbor == nil {
-				continue
-			}
 
 			newRange := currentRange - 1
-			neighborIdx := *neighbor
 
-			if newRange > calculatedSquares[neighborIdx] {
-				if (checkLos && b.CalculateLos(index, neighborIdx)) ||
-					(!checkLos && !b.MoveBoard.GetPiece(neighborIdx)) {
-					ranges = append(ranges, neighborIdx)
-					calculatedSquares[neighborIdx] = newRange
-					queueIndexes[queueEnd] = neighborIdx
+			if newRange > calculatedSquares[neighbor] {
+				if (checkLos && b.CalculateLos(index, neighbor)) ||
+					(!checkLos && !b.MoveBoard.GetPiece(neighbor)) {
+					ranges = append(ranges, neighbor)
+					calculatedSquares[neighbor] = newRange
+					queueIndexes[queueEnd] = neighbor
 					queueRanges[queueEnd] = newRange
 					queueEnd++
 				}

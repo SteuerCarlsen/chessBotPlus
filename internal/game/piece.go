@@ -1,3 +1,6 @@
 package game
 
-type Piece struct {}
+type Piece struct{}
+
+func (p Piece) Clone() Piece {
+}
