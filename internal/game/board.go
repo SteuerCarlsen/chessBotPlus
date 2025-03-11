@@ -46,9 +46,9 @@ func (b *Board) InitBoard(boardArray [64]Piece) {
 	b.aiPieceIndexes = []uint8{}
 	for i, piece := range b.BoardArray {
 		b.UpdateSquare(uint8(i), piece)
-		if piece.PlayerControlled {
+		if piece.PieceType == PlayerPiece {
 			b.playerPieceIndexes = append(b.playerPieceIndexes, uint8(i))
-		} else if piece.AIControlled {
+		} else if piece.PieceType == AIPiece {
 			b.aiPieceIndexes = append(b.aiPieceIndexes, uint8(i))
 		}
 	}
@@ -63,7 +63,7 @@ func (b *Board) SwitchPieces(index1, index2 uint8) {
 
 func (b *Board) UpdateSquare(index uint8, piece Piece) {
 	b.BoardArray[index] = piece
-	if piece.BlocksMovement {
+	if piece.BlocksMove {
 		b.MoveBoard.SetPiece(index)
 	} else {
 		b.MoveBoard.ClearPiece(index)

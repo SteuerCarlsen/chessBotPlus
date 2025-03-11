@@ -9,14 +9,7 @@ class AIPrototype {
     async startTurn() {
         this.gameState = new SimulationState(Board, 'enemy');
         this.possibleActions = this.gameState.getPossibleActions();
-        let action = null;
-        if(this.type === 'monteCarlo') {
-            action = await this.monteCarloMove();
-        } else if (this.type === 'random') {
-            action = this.randomMove();
-        } else if (this.type === 'chase') {
-            action = this.chaseMove();
-        }
+        let action = action = await this.monteCarloMove();
         if (action != false) {
             console.log('AI chose:', action);
             const actingPiece = Board.boardArray[action[1]];
@@ -29,31 +22,6 @@ class AIPrototype {
             CurrentCombat.advanceTurn()
         }
     }
-    //Method to choose a random action from possible actions
-    randomAction() {
-        const randomAction = this.possibleActions[Math.floor(Math.random() * this.possibleActions.length)];
-        if (randomAction != undefined) {
-            return randomAction;
-        }
-        return false;
-    }
-    //Chase down the closest player piece
-    chaseMove() {
-        const targets = Board.playerPieces;
-        let moveArray = new Array(3).fill(Infinity)
-        this.possibleActions.forEach(move =>{
-            if (move[0] === 'movement') {
-                targets.forEach(target => {
-                    let distance = Board.calculateMoveDistanceWrapper(move, target.temp.index);
-                    if (distance < moveArray[3]){
-                        moveArray = move.push(distance);
-                    }
-                })
-                
-            }
-        })
-        return moveArray;
-    }
     //Choose action based on Monte Carlo Tree Search (action most likely to result in win)
     async monteCarloMove() {
         MCTSAI.init(Board.exportBoard(), 'enemy')
@@ -65,7 +33,6 @@ class AIPrototype {
 
 
 //MonteCarloTreeSearch Prototype holds info and methods for the Monte Carlo Tree Search. This should stay in
-//and call the rust simulations
 class MonteCarloTreeSearch {
     constructor(explorationConstant = 0.6) {
         this.explorationConstant = explorationConstant;

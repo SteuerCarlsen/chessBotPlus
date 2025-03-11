@@ -60,3 +60,55 @@ func (n *TreeNode) expand() *TreeNode {
 
 	return childNode.Init()
 }
+
+func (n *TreeNode) simulate(maxDepth uint16) (float32, uint16) {
+	state := n.State
+	depth := uint16(0)
+
+	for depth < maxDepth {
+		aiWin, playerWin := state.IsTerminal()
+
+		switch {
+		case aiWin:
+			return 1, depth
+		case playerWin:
+			return 0, depth
+		}
+
+		actions := state.GetPossibleActions()
+		action := actions[rand.Intn(len(actions))]
+
+		state.ExecuteAction(action)
+		depth++
+	}
+
+	return 0, depth
+}
+
+func (n *TreeNode) Backpropagate(result float32, depth uint16) {
+	current := n
+
+	for current != nil {
+		current.visits++
+		current.wins += uint16(result)
+		current.turns += depth
+		current = current.parent
+	}
+}
+
+func (n *TreeNode) IsFullyExpanded() bool {
+	return len(n.untriedActions) == 0
+}
+
+func (n *TreeNode) IsTerminal() (bool, bool) {
+	return n.State.IsTerminal()
+}
+
+type MonteCarloTreeSearch struct {
+	timeLimit     uint16
+	maxDepth      uint16
+	iterationGaol uint16
+	initialBoard  Board
+	initialActor  Actor
+	initialState  State
+}

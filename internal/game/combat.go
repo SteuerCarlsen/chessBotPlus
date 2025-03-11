@@ -135,4 +135,23 @@ func (a *Action) Execute(state *State) {
 	}
 }
 
-type Ability struct{}
+type Ability struct {
+	Name           string
+	Range          uint8
+	TargetSelf     bool
+	TargetFriendly bool
+	TargetEnemy    bool
+	Components     []interface{}
+}
+
+func (a *Ability) Execute(state *State, index uint8, target uint8) {
+}
+
+// Components galore below
+type PhysicalDamageComponent interface {
+	CalculateDamage() int
+}
+
+type HitChanceComponent interface {
+	CalculateHitChance() float32
+}
