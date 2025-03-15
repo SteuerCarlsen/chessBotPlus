@@ -1,4 +1,3 @@
-// Visual Element Class used to encapsulate elements from HTML and add methods to change/update
 class VisualElement {
     constructor(id, position) {
         this.id = id;
@@ -11,11 +10,6 @@ class VisualElement {
         } else if (format === '%') {
             document.getElementById(this.id).innerHTML = newValue * 100 + '%';
         }
-    }
-
-    updateInventory(newImg, tooltip, bag) {
-        const img = `<img src='${newImg}' onclick='Inventory.Bag${bag}.positionClick(${this.position})'>`;
-        document.getElementById(this.id).innerHTML = img;
     }
 
     addEventListener(event, func) {
@@ -33,26 +27,31 @@ class VisualElement {
     clearClass() {
         document.getElementById(this.id).className = '';
     }
+
+    static click() {}
 }
 
-// VisualBoard holds all visuals for the Board
+class VisualSquare extends VisualElement {
+    constructor(id, position) {
+        super(id, position);
+    }
+
+    click() {
+        // Call GO logic
+    }
+}
+
 const VisualBoard = {
     contents: {},
 
     init(size) {
         for (let i = 0; i < size; i++) {
             const localValue = i;
-            this.contents['Square' + localValue] = new VisualElement('Square' + localValue, localValue);
+            this.contents['Square' + localValue] = new VisualSquare('Square' + localValue, localValue);
             this.contents['Square' + localValue].addEventListener('click', () => {
-                Board.selectSquare(localValue);
+               this.click();
             });
         }
-    },
-
-    refresh() {
-        Board.boardArray.forEach((value, index) => {
-            this.updateSquare(index, value);
-        });
     },
 
     updateSquare(index, value) {
@@ -102,6 +101,11 @@ const VisualInventory = {
             const localValue = i;
             this.contents['I' + localValue] = new VisualElement('Inventory' + localValue, localValue);
         }
+    },
+
+    updateInventory(newImg, tooltip, bag) {
+        const img = `<img src='${newImg}' onclick='Inventory.Bag${bag}.positionClick(${this.position})'>`;
+        document.getElementById(this.id).innerHTML = img;
     }
 };
 
@@ -118,7 +122,6 @@ const VisualCombatLog = {
         this.parent.updateValue(shownContent);
     }
 };
-
 
 
 // VisualSelectedPlayer holds shown information about the selected player character

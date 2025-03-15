@@ -65,9 +65,4 @@ const TestBoard = [,,,,,,,
     },['WeaponAttack']],,,,['terrain'],['terrain']
 ];
 
-const Board = new BoardPrototype()
-Board.init(TestBoard);
-const CurrentCombat = new RealGameState(Board);
-CurrentCombat.init();
-
 const MCTSAI = new MonteCarloTreeSearch();

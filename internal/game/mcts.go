@@ -103,12 +103,3 @@ func (n *TreeNode) IsFullyExpanded() bool {
 func (n *TreeNode) IsTerminal() (bool, bool) {
 	return n.State.IsTerminal()
 }
-
-type MonteCarloTreeSearch struct {
-	timeLimit     uint16
-	maxDepth      uint16
-	iterationGaol uint16
-	initialBoard  Board
-	initialActor  Actor
-	initialState  State
-}

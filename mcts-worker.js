@@ -1,9 +1,12 @@
 importScripts(
+    './cmd/wasm/wasm_exec.js',
     './Stats.js',
     './Abilities.js',
     './AI.js',
     './CombatHandler.js',
 )
+
+let wasmLoaded = false;
 
 self.onmessage = function(e) {
     try {
