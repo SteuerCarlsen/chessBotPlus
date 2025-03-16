@@ -1,5 +1,5 @@
 importScripts(
-    './cmd/wasm/wasm_exec.js',
+    './web/static/wasm_exec.js',
     './Stats.js',
     './Abilities.js',
     './AI.js',

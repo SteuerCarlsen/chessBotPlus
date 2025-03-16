@@ -63,13 +63,13 @@ const VisualBoard = {
             return
         }
 
-        if (value instanceof PlayerPiece) {
+        if (value instanceof Hero) {
             this.contents['Square' + index].addClass('PlayerPiece');
             this.contents['Square' + index].updateValue("😎");
             return;
         }
 
-        if (value instanceof EnemyPiece) {
+        if (value instanceof Enemy) {
             this.contents['Square' + index].addClass('EnemyPiece');
             this.contents['Square' + index].updateValue("💀");
             return;
@@ -81,14 +81,15 @@ const VisualBoard = {
             return;
         }
 
-        switch (value) {
-            case 'RG':
-                this.contents['Square' + index].addClass('Range');
-                this.contents['Square' + index].updateValue("🦶");
-                break;
-            case 'PA':
-                break;
+        
+        if (value instanceof PlayerArea) {
+            this.contents['Square' + index].addClass('Terrain');
+            this.contents['Square' + index].updateValue("🌲🌲<br>🌲🌲");
+            return;
         }
+
+        this.contents['Square' + index].addClass('Range');
+        this.contents['Square' + index].updateValue("🦶");
         return;
     }
 };

@@ -103,3 +103,75 @@ func (n *TreeNode) IsFullyExpanded() bool {
 func (n *TreeNode) IsTerminal() (bool, bool) {
 	return n.State.IsTerminal()
 }
+
+type ActionStats struct {
+	Action Action
+	Wins   uint16
+	Visits uint32
+	Turns  uint16
+}
+
+type SearchMetadata struct {
+	Iterations         uint32
+	BestScore          float64
+	BestActionAvgTurns float64
+}
+
+type MCTS struct {
+	initialBoard  Board
+	initialActor  Actor
+	initialState  State
+	timeLimit     uint16
+	iterationGoal uint16
+	maxDepth      uint16
+}
+
+func (m *MCTS) Search() *Action {
+	var results [][]ActionStats
+	// Passs to js to run webworkers and return results
+	return m.BestAction(results)
+}
+
+func (m *MCTS) BestAction(results [][]ActionStats) *Action {
+	var (
+		bestAction *Action
+		//bestScore          = math.Inf(-1)
+		//bestActionAvgTurns = math.Inf(1)
+		bestFastWin     = math.Inf(1)
+		totalIterations uint32
+	)
+
+	for _, result := range results {
+		if len(result) == 0 {
+			continue
+		}
+
+		for _, stats := range result {
+			if stats.Visits == 0 {
+				continue
+			}
+
+			score := float64(stats.Wins) / float64(stats.Visits)
+			avgTurns := float64(stats.Turns) / float64(stats.Visits)
+			fastWin := avgTurns / score
+
+			if fastWin < bestFastWin {
+				bestAction = &stats.Action
+				//bestScore = score
+				bestFastWin = fastWin
+				//bestActionAvgTurns = avgTurns
+			}
+
+			totalIterations += stats.Visits
+		}
+	}
+
+	/* Pass to console
+	&SearchMetadata{
+		Iterations:         totalIterations,
+		BestScore:          bestScore,
+		BestActionAvgTurns: bestActionAvgTurns,
+	}*/
+
+	return bestAction
+}
