@@ -58,7 +58,7 @@ const VisualBoard = {
         this.contents['Square' + index].clearClass();
         this.contents['Square' + index].addClass('Square');
 
-        if(value == undefined){
+        if(value == false){
             this.contents['Square' + index].updateValue('');
             return
         }
@@ -81,7 +81,6 @@ const VisualBoard = {
             return;
         }
 
-        
         if (value instanceof PlayerArea) {
             this.contents['Square' + index].addClass('Terrain');
             this.contents['Square' + index].updateValue("🌲🌲<br>🌲🌲");

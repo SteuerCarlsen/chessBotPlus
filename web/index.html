@@ -207,15 +207,13 @@
 </body>
 <footer>
     <script>
-        // Global initialization function for main thread
-        async function initWasm() {
-            const { default: init, calculate_los } = await import('./mcts_rust/pkg/mcts_rust.js');
-            await init();
-            window.calculate_los = calculate_los;
-            console.log('WASM initialized successfully in main thread');
-        }
-        // Initialize when page loads
-        initWasm().catch(console.error);
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch(".../main.wasm"), go.importObject)
+            .then((result) => {
+                go.run(result.instance);
+                console.log("WASM initialized successfully");
+            })
+            .catch(err => console.error("Failed to load WASM:", err));
     </script>
     <script type="text/javascript" src='Utilities.js'></script>
     <script type="text/javascript" src='VisualHandler.js'></script>
