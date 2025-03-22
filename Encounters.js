@@ -1,16 +1,41 @@
-let AcitveEncounter = null;
+let selectedEncounter = null;
+let selectedParty = new Map();
+let encounters = new Map();
+
+function selectEncounter(id) {
+    selectedEncounter = encounters.get(id);
+    console.log("Selected encounter: " + selectedEncounter.id);
+}
+
+function loadEncounter() {
+    if (selectedEncounter == null) {
+        console.log("No encounter selected");
+        return;
+    }
+    if (selectedParty.size < 1) {
+        console.log("No party selected");
+        return;
+    }
+    selectedEncounter.init();
+}
 
 class Encounter {
-    constructor(map, size = 64){
+    constructor(id, map, size = 64){
+        this.id = id;
         this.map = map;
         this.array = [];
         this.size = size;
+        if (encounters.has(id)){
+            console.log("Encounter already exists");
+            return;
+        }
+        encounters.set(id, this);
     }
 
     init(){
         VisualBoard.init(this.size);
 
-        for (i = 0; i < size; i++){
+        for (let i = 0; i < this.size; i++){
             if (this.map.has(i)){
                 this.array[i] = this.map.get(i);
             } else {
@@ -20,6 +45,7 @@ class Encounter {
         }
 
         const jsonData = JSON.stringify(this.array);
+
         //Send to GO WASM
     }
 
@@ -34,6 +60,7 @@ class Encounter {
 
 class Enemy extends BaseCharacter {
     constructor(){
+        super();
         this.type = 'Enemy';
     }
 }
@@ -54,11 +81,11 @@ class PlayerArea {
 
 const Enemy1 = new Enemy();
 
-const testEncounter = new Encounter(new Map([
+const testEncounter = new Encounter('test', new Map([
     [0, Enemy1],
     [1, Tree],
     [62, new PlayerArea()]
 ]));
 
-AcitveEncounter = testEncounter;
-AcitveEncounter.init();
+// TO DO - Code to run WebWorkers
+const Webworkers = {}

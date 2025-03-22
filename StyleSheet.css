@@ -28,6 +28,22 @@
     background-color: lightblue !important;
 }
 
+.BoardBackground {
+    display: inline-block;
+    height: 83px;
+    width: 83px;
+    border: 1px solid black;
+    margin-left: -1px;
+    margin-top: -1px;
+    margin-right: -4px;
+    margin-bottom: -4px;
+    overflow: hidden;
+    background-color: beige;
+    text-align: center;
+    font-size: xx-large;
+    line-height: 83px;
+}
+
 .PiecesContainer {
     height: 202px;
     width: 606px;
@@ -89,7 +105,7 @@
     margin-right: -4px;
     margin-bottom: -4px;
     overflow: hidden;
-    background-color: green;
+    background-color: lightgrey;
     text-align: center;
     font-size: xx-large;
     line-height: 83px;

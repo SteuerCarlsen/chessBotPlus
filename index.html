@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Dungeon Crawler</title>
     <link rel="stylesheet" href="StyleSheet.css">
+    <script src="web/static/wasm_exec.js"></script>
 </head>
 <body>
     <div class="UIElement" id="leftMenuBar">
@@ -26,6 +27,8 @@
     </div>
     <div class="UIElement Page Visible" id="storyPage">
         PLACEHOLDER - STORY
+        <br>
+        <button onclick="selectEncounter('test')">Choose the testencounter</button>
     </div>    
     <div class="UIElement Page Hidden" id="combatPage">
         <div class="UIElement" id="battlefield">
@@ -124,6 +127,8 @@
     </div>
     <div class="UIElement Page Hidden" id="heroesPage">
         PLACEHOLDER - HEROES
+        <br>
+        <button onclick="selectHero('testHero')">Choose a test hero</button>
     </div>
     <div class="UIElement Page Hidden" id="inventoryPage">
         <div class="UIElement" id="inventory">
@@ -206,22 +211,13 @@
     </div>   
 </body>
 <footer>
-    <script>
-        const go = new Go();
-        WebAssembly.instantiateStreaming(fetch(".../main.wasm"), go.importObject)
-            .then((result) => {
-                go.run(result.instance);
-                console.log("WASM initialized successfully");
-            })
-            .catch(err => console.error("Failed to load WASM:", err));
-    </script>
     <script type="text/javascript" src='Utilities.js'></script>
     <script type="text/javascript" src='VisualHandler.js'></script>
     <script type="text/javascript" src='Stats.js'></script>
-    <script type="text/javascript" src='Combat.js'></script>
     <script type="text/javascript" src='Heroes.js'></script>
     <script type="text/javascript" src='Encounters.js'></script>
     <script type="text/javascript" src='Items.js'></script>
     <script type="text/javascript" src='Editor.js'></script>
+    <script type="text/javascript" src='wasm-loader.js'></script>
 </footer>
 </html>

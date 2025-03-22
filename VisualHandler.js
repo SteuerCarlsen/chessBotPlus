@@ -56,7 +56,7 @@ const VisualBoard = {
 
     updateSquare(index, value) {
         this.contents['Square' + index].clearClass();
-        this.contents['Square' + index].addClass('Square');
+        this.contents['Square' + index].addClass('BoardBackground');
 
         if(value == false){
             this.contents['Square' + index].updateValue('');
@@ -82,8 +82,8 @@ const VisualBoard = {
         }
 
         if (value instanceof PlayerArea) {
-            this.contents['Square' + index].addClass('Terrain');
-            this.contents['Square' + index].updateValue("🌲🌲<br>🌲🌲");
+            this.contents['Square' + index].addClass('PlayerArea');
+            this.contents['Square' + index].updateValue("");
             return;
         }
 
@@ -200,10 +200,17 @@ class VisualElementMenu extends VisualElement {
         VisualPages.forEach((element) => {
             if (element === this.pageId) {
                 document.getElementById(element).classList.replace('Hidden', 'Visible');
+                this.onLoad();
             } else {
                 document.getElementById(element).classList.replace('Visible', 'Hidden');
             }
         });
+    }
+
+    onLoad() {
+        if (this.pageId === 'combatPage') {
+            loadEncounter();
+        }
     }
 }
 
