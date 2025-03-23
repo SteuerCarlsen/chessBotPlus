@@ -48,12 +48,7 @@ class Encounter {
 
         const jsonData = JSON.stringify(this.array);
 
-        if (typeof processBoard === "function") {
-            const result = processBoard(jsonData);
-            console.log("WASM result:", result);
-        } else {
-            console.warn("WASM not yet loaded or processBoard function not available");
-        }
+        processBoard(jsonData);
     }
 
     //Receive changes to Board from WASM
@@ -66,10 +61,11 @@ class Encounter {
 }
 
 class Enemy extends BaseCharacter {
-    constructor(id){
+    constructor(id, stats){
         super();
         this.id = id;
         this.type = 'Enemy';
+        this.stats = stats;
         if (enemies.has(id)){
             console.log("Enemy already exists");
             return;
@@ -98,7 +94,9 @@ class PlayerArea {
     }
 }
 
-const Enemy1 = new Enemy('enemy1');
+const Enemy1 = new Enemy('enemy1', new StatStruct(
+    [10, 0, 0]
+));
 
 const testEncounter = new Encounter('test', new Map([
     [0, Enemy1],

@@ -1,3 +1,7 @@
+function boardClick(id) {
+    VisualBoard.contents[id].click();
+}
+
 class VisualElement {
     constructor(id, position) {
         this.id = id;
@@ -37,7 +41,7 @@ class VisualSquare extends VisualElement {
     }
 
     click() {
-        // Call GO logic
+        console.log(getSquare(this.position));
     }
 }
 
@@ -47,9 +51,10 @@ const VisualBoard = {
     init(size) {
         for (let i = 0; i < size; i++) {
             const localValue = i;
-            this.contents['Square' + localValue] = new VisualSquare('Square' + localValue, localValue);
-            this.contents['Square' + localValue].addEventListener('click', () => {
-               this.click();
+            const textLocalValue = 'Square' + localValue;
+            this.contents[textLocalValue] = new VisualSquare(textLocalValue, localValue);
+            this.contents[textLocalValue].addEventListener('click', () => {
+               boardClick(textLocalValue);
             });
         }
     },

@@ -1,6 +1,18 @@
 package game
 
-var CurrentBoard Board
+var ActiveGame = State{
+	Board:     Board{},
+	GameState: SetupCombat,
+}
+var SelectedPiece *Piece
+
+type GameState uint8
+
+const (
+	SetupCombat GameState = iota
+	InCombat
+	PostCombat
+)
 
 type Actor uint8
 
@@ -10,6 +22,7 @@ const (
 )
 
 type State struct {
+	GameState       GameState
 	CurrentActor    Actor
 	currentTurnType uint8
 	turn            uint16
@@ -19,6 +32,7 @@ type State struct {
 
 func (s *State) Clone() State {
 	return State{
+		GameState:       s.GameState,
 		CurrentActor:    s.CurrentActor,
 		currentTurnType: s.currentTurnType,
 		turn:            s.turn,
@@ -28,21 +42,23 @@ func (s *State) Clone() State {
 }
 
 func (s *State) AdvanceTurn() {
-	s.currentTurnType++
+	if s.GameState == InCombat {
+		s.currentTurnType++
 
-	switch s.currentTurnType {
-	case 1:
-		s.turn++
-		s.TurnStart()
-	case 2:
-		s.TurnAction()
-	case 3:
-		s.currentTurnType = 0
-		playerWin, aiWin := s.IsTerminal()
-		if playerWin || aiWin {
-			s.GameEnd()
+		switch s.currentTurnType {
+		case 1:
+			s.turn++
+			s.TurnStart()
+		case 2:
+			s.TurnAction()
+		case 3:
+			s.currentTurnType = 0
+			playerWin, aiWin := s.IsTerminal()
+			if playerWin || aiWin {
+				s.GameEnd()
+			}
+			s.TurnEnd()
 		}
-		s.TurnEnd()
 	}
 }
 

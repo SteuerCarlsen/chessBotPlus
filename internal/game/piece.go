@@ -1,5 +1,7 @@
 package game
 
+import "math"
+
 type PieceType uint8
 
 const (
@@ -60,13 +62,43 @@ func (p *Piece) GetValidAbilities(board Board) []Action {
 	return validAbilities
 }
 
+type StatType uint8
+
+const (
+	FlatStat StatType = iota
+	PercentStat
+	HealthStat
+)
+
 type Stat struct {
-	initValue    int16
-	currentValue int16
+	Type         StatType
+	Base         float64
+	FlatBonus    float64
+	PercentBonus float64
+	Total        float64
 }
 
-func (s *Stat) GetCurrentValue() int16 {
-	return s.currentValue
+func (s *Stat) CalculateTotal() {
+	preCalced := s.Base*(1+s.PercentBonus) + s.FlatBonus
+	switch s.Type {
+	case FlatStat:
+		s.Total = preCalced
+	case PercentStat:
+		s.Total = math.Round(preCalced)
+	case HealthStat:
+		s.Total = math.Max(0, preCalced)
+		//Call some kind of piece death function
+	}
+}
+
+func (s *Stat) AddFlatBonus(amount float64) {
+	s.FlatBonus += amount
+	s.CalculateTotal()
+}
+
+func (s *Stat) AddPercentBonus(amount float64) {
+	s.PercentBonus += amount
+	s.CalculateTotal()
 }
 
 type StatStruct struct {
