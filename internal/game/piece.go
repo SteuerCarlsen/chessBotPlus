@@ -5,7 +5,9 @@ type PieceType uint8
 const (
 	TerrainPiece PieceType = iota
 	PlayerPiece
-	AIPiece
+	EnemyPiece
+	EmptyPiece
+	PlayerAreaPiece
 )
 
 type Piece struct {

@@ -1,6 +1,8 @@
 let selectedEncounter = null;
 let selectedParty = new Map();
 let encounters = new Map();
+let enemies = new Map();
+let terrain = new Map();
 
 function selectEncounter(id) {
     selectedEncounter = encounters.get(id);
@@ -46,7 +48,12 @@ class Encounter {
 
         const jsonData = JSON.stringify(this.array);
 
-        //Send to GO WASM
+        if (typeof processBoard === "function") {
+            const result = processBoard(jsonData);
+            console.log("WASM result:", result);
+        } else {
+            console.warn("WASM not yet loaded or processBoard function not available");
+        }
     }
 
     //Receive changes to Board from WASM
@@ -59,19 +66,31 @@ class Encounter {
 }
 
 class Enemy extends BaseCharacter {
-    constructor(){
+    constructor(id){
         super();
+        this.id = id;
         this.type = 'Enemy';
+        if (enemies.has(id)){
+            console.log("Enemy already exists");
+            return;
+        }
+        enemies.set(id, this);
     }
 }
 
 class Terrain {
-    constructor(){
+    constructor(id){
+        this.id = id;
         this.type = 'Terrain';
+        if (terrain.has(id)){
+            console.log("Terrain already exists");
+            return;
+        }
+        terrain.set(id, this);
     }
 }
 
-const Tree = new Terrain();
+const Tree = new Terrain('tree');
 
 class PlayerArea {
     constructor(){
@@ -79,7 +98,7 @@ class PlayerArea {
     }
 }
 
-const Enemy1 = new Enemy();
+const Enemy1 = new Enemy('enemy1');
 
 const testEncounter = new Encounter('test', new Map([
     [0, Enemy1],

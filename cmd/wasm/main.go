@@ -3,6 +3,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"syscall/js"
 
 	"github.com/steuercarlsen/chessDungeonCrawler/internal/game"
@@ -29,11 +31,42 @@ func ProcessBoard(this js.Value, args []js.Value) interface{} {
 	// Get the JSON string from JavaScript
 	jsonData := args[0].String()
 
-	// Process the board data
-	// Implement actual logic
-	result := "Processed board with " + jsonData
+	var board []interface{}
+	if err := json.Unmarshal([]byte(jsonData), &board); err != nil {
+		return "Error parsing JSON: " + err.Error()
+	}
 
-	return result
+	var returnBoardArray [64]game.Piece
+
+	for i, piece := range board {
+		fmt.Printf("Piece: %v\n", piece)
+		if piece == false {
+			returnBoardArray[i] = game.Piece{Name: "Empty", PieceType: game.EmptyPiece}
+			continue
+		}
+		if pieceMap, ok := piece.(map[string]interface{}); ok {
+			pieceType := pieceMap["type"].(string)
+			switch pieceType {
+			case "Enemy":
+				returnBoardArray[i] = game.Piece{Name: "Enemy", PieceType: game.EnemyPiece}
+			case "Terrain":
+				returnBoardArray[i] = game.Piece{Name: "Terrain", PieceType: game.TerrainPiece}
+			case "PlayerArea":
+				returnBoardArray[i] = game.Piece{Name: "PlayerArea", PieceType: game.PlayerAreaPiece}
+			}
+		}
+	}
+
+	game.CurrentBoard.InitBoard(returnBoardArray)
+
+	return "Succes"
 }
 
-func main() {}
+func main() {
+	// Register functions to be called from JavaScript
+	js.Global().Set("processBoard", js.FuncOf(ProcessBoard))
+
+	// Keep the program running
+	c := make(chan struct{}, 0)
+	<-c
+}

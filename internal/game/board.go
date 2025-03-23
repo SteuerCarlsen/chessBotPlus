@@ -48,7 +48,7 @@ func (b *Board) InitBoard(boardArray [64]Piece) {
 		b.UpdateSquare(uint8(i), piece)
 		if piece.PieceType == PlayerPiece {
 			b.playerPieceIndexes = append(b.playerPieceIndexes, uint8(i))
-		} else if piece.PieceType == AIPiece {
+		} else if piece.PieceType == EnemyPiece {
 			b.aiPieceIndexes = append(b.aiPieceIndexes, uint8(i))
 		}
 	}
