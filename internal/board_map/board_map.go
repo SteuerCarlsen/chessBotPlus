@@ -1,4 +1,4 @@
-package game
+package board_map
 
 // Hardcoded squares on the LOS between [index][target]. 255 represents self and 254 a direct neighbor.
 var LOSLineMap = [64][64][]uint8{

@@ -66,7 +66,6 @@ type StatType uint8
 
 const (
 	FlatStat StatType = iota
-	PercentStat
 	HealthStat
 )
 
@@ -80,15 +79,11 @@ type Stat struct {
 
 func (s *Stat) CalculateTotal() {
 	preCalced := s.Base*(1+s.PercentBonus) + s.FlatBonus
-	switch s.Type {
-	case FlatStat:
-		s.Total = preCalced
-	case PercentStat:
-		s.Total = math.Round(preCalced)
-	case HealthStat:
-		s.Total = math.Max(0, preCalced)
-		//Call some kind of piece death function
+	if s.Type == HealthStat {
+		preCalced = math.Max(0, preCalced)
+		return
 	}
+	s.Total = preCalced
 }
 
 func (s *Stat) AddFlatBonus(amount float64) {

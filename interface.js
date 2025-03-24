@@ -232,3 +232,53 @@ const VisualMenuBar = {
 
 // All page names to hide/show pages
 const VisualPages = ['storyPage', 'combatPage', 'heroesPage', 'inventoryPage', 'abilitiesPage', 'townPage', 'settingsPage'];
+
+const combatLog = {
+    log: [],
+    shownLog: [],
+    maxEntries: 100,
+
+    addEntry(type, payLoad = {}) {
+        this.log.unshift({
+            type,
+            payLoad,
+            timeStamp: Date.now(),
+        })
+
+        if(type == "move"){
+            this.moveEntry(payLoad);
+        }
+
+        if(type == "ability"){
+            this.abilityEntry(payLoad);
+        }
+        
+        if (this.log.length > this.maxEntries) {
+            this.removeOldestEntry();
+        }
+
+        this.updateShownLog();
+    },
+
+    abilityEntry(payLoad) {
+        this.shownLog.unshift(`Turn ${CurrentCombat.turn}: ${payLoad.piece} used ${payLoad.ability} on ${payLoad.target} for ${payLoad.value}`);
+    },
+
+    moveEntry(payLoad) {
+        this.shownLog.unshift(`Turn ${CurrentCombat.turn}: ${payLoad.piece} moved to square ${payLoad.index}`);
+    },
+
+    removeOldestEntry() {
+        this.log.pop();
+        this.shownLog.pop();
+    },
+
+    clearLog() {
+        this.log = [];
+    },
+
+    updateShownLog() {
+        VisualCombatLog.update(this.shownLog);
+    }
+
+}

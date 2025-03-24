@@ -1,5 +1,7 @@
 package game
 
+import "github.com/steuercarlsen/chessDungeonCrawler/internal/board_map"
+
 type BitBoard uint64
 
 func (b *BitBoard) SetPiece(index uint8) {
@@ -45,6 +47,7 @@ func (b *Board) InitBoard(boardArray [64]Piece) {
 	b.playerPieceIndexes = []uint8{}
 	b.aiPieceIndexes = []uint8{}
 	for i, piece := range b.BoardArray {
+		//$TODO: Send values to frontend VisualBoard
 		b.UpdateSquare(uint8(i), piece)
 		if piece.PieceType == PlayerPiece {
 			b.playerPieceIndexes = append(b.playerPieceIndexes, uint8(i))
@@ -76,7 +79,7 @@ func (b *Board) UpdateSquare(index uint8, piece Piece) {
 }
 
 func (b *Board) CalculateLos(index, target uint8) bool {
-	losLine := LOSLineMap[index][target]
+	losLine := board_map.LOSLineMap[index][target]
 
 	if losLine[0] == 254 || losLine[0] == 255 {
 		return true
@@ -112,7 +115,7 @@ func (b *Board) CalculateRange(index uint8, rangeValue uint8, checkLos bool) []u
 			continue
 		}
 
-		for _, neighbor := range NeighborMap[currentIndex] {
+		for _, neighbor := range board_map.NeighborMap[currentIndex] {
 
 			newRange := currentRange - 1
 
