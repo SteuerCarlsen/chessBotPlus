@@ -3,64 +3,65 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"syscall/js"
 
 	"github.com/steuercarlsen/chessDungeonCrawler/internal/game"
+	"github.com/steuercarlsen/chessDungeonCrawler/internal/game_data"
 )
 
 var (
-	gameState *game.State
+	GameState         *game.State
+	SelectedEncounter game_data.Encounter
+	SelectedHeroes    = make([]game_data.Hero, 0, game_data.MaxPartySize)
 )
 
-// Process the board data from JavaScript
-func ProcessBoard(this js.Value, args []js.Value) interface{} {
-	if len(args) == 0 {
-		return "No board data provided"
-	}
-
-	// Get the JSON string from JavaScript
-	jsonData := args[0].String()
-
-	var board []interface{}
-	if err := json.Unmarshal([]byte(jsonData), &board); err != nil {
-		return "Error parsing JSON: " + err.Error()
-	}
-
-	var returnBoardArray [64]game.Piece
-
-	for i, piece := range board {
-		if piece == false {
-			returnBoardArray[i] = game.Piece{Name: "Empty", PieceType: game.EmptyPiece}
-			continue
-		}
-		if pieceMap, ok := piece.(map[string]interface{}); ok {
-			pieceType := pieceMap["type"].(string)
-			switch pieceType {
-			case "Enemy":
-				statMap := pieceMap["stats"].(map[string]interface{})
-				healthStats := statMap["health"].(map[string]interface{})
-				stats := game.StatStruct{
-					Health: game.Stat{Type: game.HealthStat, Base: healthStats["base"].(float64), FlatBonus: healthStats["flatBonus"].(float64), PercentBonus: healthStats["percentBonus"].(float64)},
-				}
-				returnBoardArray[i] = game.Piece{Name: "Enemy", PieceType: game.EnemyPiece, Stats: stats}
-			case "Terrain":
-				returnBoardArray[i] = game.Piece{Name: "Terrain", PieceType: game.TerrainPiece}
-			case "PlayerArea":
-				returnBoardArray[i] = game.Piece{Name: "PlayerArea", PieceType: game.PlayerAreaPiece}
-			}
-		}
-	}
-
-	game.ActiveGame.Board.InitBoard(returnBoardArray)
-
-	fmt.Printf("Board data: %v\n", board)
-
-	return "Succes"
+type JSFunction struct {
+	Name string
+	Func func(js.Value, []js.Value) any
 }
 
-func GetSquare(this js.Value, args []js.Value) interface{} {
+var API = []JSFunction{
+	{Name: "selectEncounter", Func: SelectEncounter},
+	{Name: "selectHero", Func: SelectHero},
+	{Name: "initiateCombat", Func: InitiateCombat},
+	{Name: "getSquare", Func: GetSquare},
+}
+
+func RegisterAPI() {
+	for _, api := range API {
+		js.Global().Set(api.Name, js.FuncOf(api.Func))
+	}
+}
+
+func SelectEncounter(this js.Value, args []js.Value) any {
+	encounterID := args[0].String()
+	SelectedEncounter = game_data.Encounters[encounterID]
+	return "Encounter selected"
+}
+
+func SelectHero(this js.Value, args []js.Value) any {
+	if len(SelectedHeroes) == game_data.MaxPartySize {
+		return "Party full"
+	}
+
+	heroID := args[0].Index(0).String()
+	hero := game_data.Heroes[heroID]
+
+	itemsArray := args[1]
+	for i := 0; i < itemsArray.Length(); i++ {
+		itemID := itemsArray.Index(i).String()
+		hero.Equipment = append(hero.Equipment, game_data.Items[itemID])
+	}
+
+	SelectedHeroes = append(SelectedHeroes, hero)
+	return "Hero selected"
+}
+
+func InitiateCombat(this js.Value, args []js.Value) any {
+	return "Combat initiated"
+}
+
+func GetSquare(this js.Value, args []js.Value) any {
 	piece := &game.ActiveGame.Board.BoardArray[args[0].Int()]
 	activeGameState := game.ActiveGame.GameState
 
@@ -86,11 +87,8 @@ func GetSquare(this js.Value, args []js.Value) interface{} {
 }
 
 func main() {
-	// Register functions to be called from JavaScript
-	js.Global().Set("processBoard", js.FuncOf(ProcessBoard))
-	js.Global().Set("getSquare", js.FuncOf(GetSquare))
+	RegisterAPI()
 
-	// Keep the program running
-	c := make(chan struct{}, 0)
-	<-c
+	// Prevent program from exiting
+	select {}
 }

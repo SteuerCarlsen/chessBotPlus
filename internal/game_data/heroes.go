@@ -1,5 +1,8 @@
 package game_data
 
-var Heroes = []Hero{}
+var Heroes = map[string]Hero{}
 
-type Hero struct{}
+type Hero struct {
+	Name      string
+	Equipment []Item
+}
